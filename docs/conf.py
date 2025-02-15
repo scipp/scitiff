@@ -81,7 +81,6 @@ typehints_defaults = 'comma'
 typehints_use_rtype = False
 
 
-
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
 
