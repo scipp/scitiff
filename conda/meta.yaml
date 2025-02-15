@@ -1,0 +1,57 @@
+package:
+  name: esstiff
+
+  version: {{ GIT_DESCRIBE_TAG }}
+
+source:
+  path: ..
+
+
+{% set pyproject = load_file_data('pyproject.toml') %}
+{% set dependencies = pyproject.get('project', {}).get('dependencies', {}) %}
+{% set test_dependencies = pyproject.get('project', {}).get('optional-dependencies', {}).get('test', {}) %}
+
+
+requirements:
+  build:
+    - setuptools
+    - setuptools_scm
+  run:
+    - python>=3.10
+
+  {# Conda does not allow spaces between package name and version, so remove them #}
+  {% for package in dependencies %}
+    - {% if package == "graphviz" %}python-graphviz{% else %}{{ package|replace(" ", "") }}{% endif %}
+  {% endfor %}
+
+
+test:
+  imports:
+    - esstiff
+  requires:
+
+  {# Conda does not allow spaces between package name and version, so remove them #}
+  {% for package in test_dependencies %}
+    - {% if package == "graphviz" %}python-graphviz{% else %}{{ package|replace(" ", "") }}{% endif %}
+  {% endfor %}
+
+
+  source_files:
+    - pyproject.toml
+    - tests/
+  commands:
+    # We ignore warnings during release package builds
+    - python -m pytest -Wignore tests
+
+build:
+  noarch: python
+  script:
+    - python -m pip install .
+
+about:
+  home: https://github.com//esstiff
+  license: BSD-3-Clause
+  summary: Neutron image tiff format and related python tools
+  description: Neutron image tiff format and related python tools
+  dev_url: https://github.com//esstiff
+  doc_url: https://.github.io/esstiff
