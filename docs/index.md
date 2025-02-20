@@ -10,12 +10,9 @@ EssTiff format inherits [``HyperStacks``](https://imagejdocu.list.lu/gui/image/h
 Metadata is a dictionary so the schema is defined as a json schema.
 
 
-```{button-ref} user-guide/io
-:class: stretched-link
-
-IO User Guide
-
-```
+:::{card} IO User Guide
+:link: user-guide/io.html
+:::
 
 ```{toctree}
 ---
@@ -25,4 +22,5 @@ hidden:
 api-reference/index
 developer/index
 about/index
+user-guide/index
 ```
