@@ -5,82 +5,8 @@
     "description": "Neutron Imaging TIFF Metadata Schema",
     "type": "object",
     "properties": {
-        "sizes": {
-            "type": "object",
-            "properties": {
-                "x": {
-                    "type": "integer",
-                    "minimum": 1,
-                    "description": "Width of the image in pixels"
-                },
-                "y": {
-                    "type": "integer",
-                    "minimum": 1,
-                    "description": "Height of the image in pixels"
-                },
-                "z": {
-                    "type": "integer",
-                    "minimum": 1,
-                    "description": "Number of frames in the image"
-                },
-                "c": {
-                    "type": "integer",
-                    "enum": [1, 2, 3],
-                    "description": "Number of channels in the image"
-                },
-                "t": {
-                    "type": "integer",
-                    "minimum": 1,
-                    "description": "Number of timepoints in the image. In the ESSTIFFMETA schema, this represents ``time-of-flight``, ``time-of-arrival`` or ``wavelength``."
-                }
-            },
-            "required": ["x", "y", "z", "c", "t"],
-            "description": "Size of each dimension of the image. It follows ImageJ Hyperstack convention."
-        },
-        "coords": {
-            "type": "object",
-            "properties": {
-                "x": {
-                    "type": "array",
-                    "items": {
-                        "type": "number"
-                    },
-                    "description": "Coordinate values of the x-axis. It should be a 1D array of length ``x``."
-                },
-                "y": {
-                    "type": "array",
-                    "items": {
-                        "type": "number"
-                    },
-                    "description": "Coordinate values of the y-axis. It should be a 1D array of length ``y``."
-                },
-                "z": {
-                    "type": "array",
-                    "items": {
-                        "type": "number"
-                    },
-                    "description": "Coordinate values of the z-axis. It should be a 1D array of length ``z``."
-                },
-                "c": {
-                    "type": "array",
-                    "items": {
-                        "type": "number"
-                    },
-                    "description": "Coordinate values of the c-axis. It should be a 1D array of length ``c``."
-                },
-                "t": {
-                    "type": "array",
-                    "items": {
-                        "type": "number"
-                    },
-                    "description": "Coordinate values of the t-axis. It should be a 1D array of length ``t``."
-                }
-            }
-        },
-        "unit": {
-            "type": "string",
-            "description": "Unit of each pixel, i.e. ``counts``."
-        },
-        "required": ["sizes", "unit"]
+        "image": {
+            "$ref": "https://github.com/YooSunYoung/esstiff/v0/src/esstiff/_resources/scipp_dataarray_schema.json"
+        }
     }
 }
