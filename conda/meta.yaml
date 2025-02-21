@@ -1,5 +1,5 @@
 package:
-  name: esstiff
+  name: scitiff
 
   version: {{ GIT_DESCRIBE_TAG }}
 
@@ -27,7 +27,7 @@ requirements:
 
 test:
   imports:
-    - esstiff
+    - scitiff
   requires:
 
   {# Conda does not allow spaces between package name and version, so remove them #}
@@ -49,9 +49,9 @@ build:
     - python -m pip install .
 
 about:
-  home: https://github.com//esstiff
+  home: https://github.com/ess-dmsc-dram/scitiff
   license: BSD-3-Clause
-  summary: Neutron image tiff format and related python tools
-  description: Neutron image tiff format and related python tools
-  dev_url: https://github.com//esstiff
-  doc_url: https://.github.io/esstiff
+  summary: Scientific tiff format for imaging experiments.
+  description: Scientific tiff format for imaging experiments.
+  dev_url: https://github.com/ess-dmsc-dram/scitiff
+  doc_url: https://ess-dmsc-dram.github.io/scitiff

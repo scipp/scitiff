@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: BSD-3-Clause
-# Copyright (c) 2025  contributors (https://github.com/)
+# Copyright (c) 2025 Ess dmsc dram contributors (https://github.com/ESS-DMSC-DRAM)
 
 import doctest
 import os
@@ -14,7 +14,7 @@ sys.path.insert(0, os.path.abspath('.'))
 logger = logging.getLogger(__name__)
 
 # General information about the project.
-project = 'EssTiff'
+project = 'SciTiff'
 copyright = '2025 Scipp contributors'
 author = 'Scipp contributors'
 
@@ -99,7 +99,7 @@ master_doc = 'index'
 #
 
 try:
-    release = get_version("esstiff")
+    release = get_version("scitiff")
     version = ".".join(release.split('.')[:3])  # CalVer
 except PackageNotFoundError:
     logger.info(
@@ -145,24 +145,27 @@ html_theme_options = {
         "image_dark": "_static/logo-dark.svg",
     },
     "external_links": [
-        {"name": "", "url": "https://.github.io/"},
+        {"name": "EasyImaging", "url": "https://ESS DMSC DRAM.github.io/easyimaging"},
+        {"name": "ESSImaging", "url": "https://ESS DMSC DRAM.github.io/essimaging"},
+        {"name": "Plopp", "url": "https://ESS DMSC DRAM.github.io/plopp"},
+        {"name": "Scipp", "url": "https://ESS DMSC DRAM.github.io"},
     ],
     "icon_links": [
         {
             "name": "GitHub",
-            "url": "https://github.com//esstiff",
+            "url": "https://github.com/ESS-DMSC-DRAM/scitiff",
             "icon": "fa-brands fa-github",
             "type": "fontawesome",
         },
         {
             "name": "PyPI",
-            "url": "https://pypi.org/project/esstiff/",
+            "url": "https://pypi.org/project/scitiff/",
             "icon": "fa-brands fa-python",
             "type": "fontawesome",
         },
         {
             "name": "Conda",
-            "url": "https://anaconda.org//esstiff",
+            "url": "https://anaconda.org/ESS DMSC DRAM/scitiff",
             "icon": "fa-custom fa-anaconda",
             "type": "fontawesome",
         },
@@ -177,7 +180,7 @@ html_sidebars = {
     "**": ["sidebar-nav-bs", "page-toc"],
 }
 
-html_title = "EssTiff"
+html_title = "SciTiff"
 html_logo = "_static/logo.svg"
 html_favicon = "_static/favicon.ico"
 
@@ -191,7 +194,7 @@ html_js_files = ["anaconda-icon.js"]
 # -- Options for HTMLHelp output ------------------------------------------
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'esstiffdoc'
+htmlhelp_basename = 'scitiffdoc'
 
 # -- Options for Matplotlib in notebooks ----------------------------------
 

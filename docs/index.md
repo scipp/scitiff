@@ -1,7 +1,7 @@
-# EssTiff
+# SciTiff
 
 <span style="font-size:1.2em;font-style:italic;color:#5a5a5a">
-  Neutron image tiff format and related python tools
+  Scientific tiff format for imaging experiments.
   </br></br>
 </span>
 

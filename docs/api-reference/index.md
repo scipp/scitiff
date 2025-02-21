@@ -3,7 +3,7 @@
 ## Classes
 
 ```{eval-rst}
-.. currentmodule:: esstiff
+.. currentmodule:: scitiff
 
 .. autosummary::
    :toctree: ../generated/classes

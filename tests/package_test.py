@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: BSD-3-Clause
-# Copyright (c) 2025  contributors (https://github.com/)
+# Copyright (c) 2025 Ess dmsc dram contributors (https://github.com/ESS-DMSC-DRAM)
 
 """Tests of package integrity.
 
@@ -7,7 +7,7 @@ Note that additional imports need to be added for repositories that
 contain multiple packages.
 """
 
-import esstiff as pkg
+import scitiff as pkg
 
 
 def test_has_version():
