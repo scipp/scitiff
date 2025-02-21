@@ -72,7 +72,7 @@
                     "description": "Variance of the variable."
                 }
             },
-              "required": ["dims", "shape", "unit", "dtype", "values"]
+            "required": ["dims", "shape", "unit", "dtype", "values"]
         },
         "scipp-dataarray-meta": {
             "type": "object",
