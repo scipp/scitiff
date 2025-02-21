@@ -18,9 +18,17 @@ To cite a specific version of SciTiff, select the desired version on Zenodo to g
 
 ## Older versions of the documentation
 
+<<<<<<< before updating
 Older versions of the documentation pages can be found under the assets of each [release](https://github.com/ESS-DMSC-DRAM/scitiff/releases).
+=======
+Older versions of the documentation pages can be found under the assets of each [release](https://github.com/ess-dmsc-dram/scitiff/releases).
+>>>>>>> after updating
 Simply download the archive, unzip and view locally in a web browser.
 
 ## Source code and development
 
+<<<<<<< before updating
 SciTiff is hosted and developed [on GitHub](https://github.com/ESS-DMSC-DRAM/scitiff).
+=======
+SciTiff is hosted and developed [on GitHub](https://github.com/ess-dmsc-dram/scitiff).
+>>>>>>> after updating

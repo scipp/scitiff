@@ -45,9 +45,9 @@ gui = [
 ]
 
 [project.urls]
-"Bug Tracker" = "https://github.com/ESS-DMSC-DRAM/scitiff/issues"
-"Documentation" = "https://ESS-DMSC-DRAM.github.io/scitiff"
-"Source" = "https://github.com/ESS-DMSC-DRAM/scitiff"
+"Bug Tracker" = "https://github.com/ess-dmsc-dram/scitiff/issues"
+"Documentation" = "https://ess-dmsc-dram.github.io/scitiff"
+"Source" = "https://github.com/ess-dmsc-dram/scitiff"
 
 [tool.setuptools_scm]
 

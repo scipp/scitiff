@@ -1,6 +1,10 @@
 BSD 3-Clause License
 
+<<<<<<< before updating
 Copyright (c) 2025, Ess dmsc dram contributors (https://github.com/ESS-DMSC-DRAM)
+=======
+Copyright (c) 2025, Ess-dmsc-dram contributors (https://github.com/ess-dmsc-dram)
+>>>>>>> after updating
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without

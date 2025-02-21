@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: BSD-3-Clause
-# Copyright (c) 2025 Ess dmsc dram contributors (https://github.com/ESS-DMSC-DRAM)
+# Copyright (c) 2025 Ess-dmsc-dram contributors (https://github.com/ess-dmsc-dram)
 
 import doctest
 import os
@@ -145,15 +145,15 @@ html_theme_options = {
         "image_dark": "_static/logo-dark.svg",
     },
     "external_links": [
-        {"name": "EasyImaging", "url": "https://ESS DMSC DRAM.github.io/easyimaging"},
-        {"name": "ESSImaging", "url": "https://ESS DMSC DRAM.github.io/essimaging"},
-        {"name": "Plopp", "url": "https://ESS DMSC DRAM.github.io/plopp"},
-        {"name": "Scipp", "url": "https://ESS DMSC DRAM.github.io"},
+        {"name": "EasyImaging", "url": "https://ess-dmsc-dram.github.io/easyimaging"},
+        {"name": "ESSImaging", "url": "https://ess-dmsc-dram.github.io/essimaging"},
+        {"name": "Plopp", "url": "https://ess-dmsc-dram.github.io/plopp"},
+        {"name": "Scipp", "url": "https://ess-dmsc-dram.github.io"},
     ],
     "icon_links": [
         {
             "name": "GitHub",
-            "url": "https://github.com/ESS-DMSC-DRAM/scitiff",
+            "url": "https://github.com/ess-dmsc-dram/scitiff",
             "icon": "fa-brands fa-github",
             "type": "fontawesome",
         },
@@ -165,7 +165,7 @@ html_theme_options = {
         },
         {
             "name": "Conda",
-            "url": "https://anaconda.org/ESS DMSC DRAM/scitiff",
+            "url": "https://anaconda.org/ess-dmsc-dram/scitiff",
             "icon": "fa-custom fa-anaconda",
             "type": "fontawesome",
         },
