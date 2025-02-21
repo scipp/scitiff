@@ -32,7 +32,6 @@ requires-python = ">=3.10"
 dependencies = [
     "scipp",
     "tifffile",
-    "plopp"
 ]
 
 dynamic = ["version"]
@@ -40,6 +39,12 @@ dynamic = ["version"]
 [project.optional-dependencies]
 test = [
     "pytest",
+]
+docs = [
+    "plopp",
+]
+gui = [
+     "textual",
 ]
 
 [project.urls]
