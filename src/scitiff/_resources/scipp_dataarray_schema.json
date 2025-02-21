@@ -1,6 +1,6 @@
 {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "https://github.com/YooSunYoung/esstiff/v0/src/esstiff/_resources/scipp_dataarray_schema.json",
+    "$id": "https://github.com/ess-dmsc-dram/scitiff/blob/v0/src/scitiff/_resources/scipp_dataarray_schema.json",
     "title": "SCIPPDATAARRAY",
     "description": "Scipp DataArray Schema",
     "type": "object",
@@ -8,7 +8,7 @@
         "masks": {
             "type": "object",
             "items": {
-                    "$ref": "https://github.com/YooSunYoung/esstiff/v0/src/esstiff/_resources/scipp_variable_schema.json"
+                    "$ref": "https://github.com/ess-dmsc-dram/scitiff/blob/v0/src/scitiff/_resources/scipp_variable_schema.json"
                 }
             },
             "description": "Masks of the DataArray."
@@ -16,12 +16,12 @@
         "coords": {
             "type": "object",
             "items": {
-                    "$ref": "https://github.com/YooSunYoung/esstiff/v0/src/esstiff/_resources/scipp_variable_schema.json"
+                    "$ref": "https://github.com/ess-dmsc-dram/scitiff/blob/v0/src/scitiff/_resources/scipp_variable_schema.json"
             },
             "description": "Coordinates of the DataArray."
         },
         "data": {
-            "$ref": "https://github.com/YooSunYoung/esstiff/v0/src/esstiff/_resources/scipp_variable_schema.json"
+            "$ref": "https://github.com/ess-dmsc-dram/scitiff/blob/v0/src/scitiff/_resources/scipp_variable_schema.json"
         },
         "name": {
             "type": "string",

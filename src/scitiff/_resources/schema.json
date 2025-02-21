@@ -1,12 +1,12 @@
 {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "https://github.com/YooSunYoung/esstiff/v0/src/esstiff/_resources/schema.json",
-    "title": "ESSTIFFMETA",
-    "description": "Neutron Imaging TIFF Metadata Schema",
+    "$id": "https://github.com/ess-dmsc-dram/scitiff/blob/v0/src/scitiff/_resources/schema.json",
+    "title": "SCITIFFMETA",
+    "description": "Scientific TIFF Metadata Schema",
     "type": "object",
     "properties": {
         "image": {
-            "$ref": "https://github.com/YooSunYoung/esstiff/v0/src/esstiff/_resources/scipp_dataarray_schema.json"
+            "$ref": "https://github.com/ess-dmsc-dram/scitiff/blob/v0/src/scitiff/_resources/scipp_dataarray_schema.json"
         }
     }
 }
