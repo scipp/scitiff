@@ -30,6 +30,7 @@ requires-python = ">=3.10"
 # Run 'tox -e deps' after making changes here. This will update requirement files.
 # Make sure to list one dependency per line.
 dependencies = [
+    "scipp",
     "tifffile",
 ]
 
@@ -39,19 +40,13 @@ dynamic = ["version"]
 test = [
     "pytest",
 ]
-docs = [
-    "plopp",
-]
 gui = [
     "textual",
-]
-all = [
-    "scipp",
 ]
 
 [project.urls]
 "Bug Tracker" = "https://github.com/ESS-DMSC-DRAM/scitiff/issues"
-"Documentation" = "https://ESS DMSC DRAM.github.io/scitiff"
+"Documentation" = "https://ESS-DMSC-DRAM.github.io/scitiff"
 "Source" = "https://github.com/ESS-DMSC-DRAM/scitiff"
 
 [tool.setuptools_scm]

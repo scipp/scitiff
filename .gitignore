@@ -45,3 +45,5 @@ docs/generated/
 *.zip
 *.sqw
 *.nxspe
+*.tiff
+*.tif
