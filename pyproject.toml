@@ -32,6 +32,7 @@ requires-python = ">=3.10"
 dependencies = [
     "scipp",
     "tifffile",
+    "jsonschema",
 ]
 
 dynamic = ["version"]

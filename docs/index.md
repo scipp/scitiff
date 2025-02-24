@@ -5,7 +5,7 @@
   </br></br>
 </span>
 
-EssTiff format inherits [``HyperStacks``](https://imagejdocu.list.lu/gui/image/hyperstacks) and define metadata on top of the ``HyperStacks``.
+SciTiff format inherits [``HyperStacks``](https://imagejdocu.list.lu/gui/image/hyperstacks) and define metadata on top of the ``HyperStacks``.
 
 Metadata is a dictionary so the schema is defined as a json schema.
 

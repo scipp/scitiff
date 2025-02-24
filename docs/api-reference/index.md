@@ -17,6 +17,9 @@
 .. autosummary::
    :toctree: ../generated/functions
    :recursive:
+   export_scitiff
+   load_scitiff
+   validate_scitiff
 ```
 
 ## Submodules
