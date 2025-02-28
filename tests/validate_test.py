@@ -3,7 +3,7 @@
 import pytest
 import scipp as sc
 
-from scitiff import validate_scitiff
+from scitiff import validate_scitiff_metadata_container
 from scitiff.io import extract_metadata
 
 
@@ -27,4 +27,4 @@ def sample_image() -> sc.DataArray:
 
 
 def test_validation(sample_image) -> None:
-    validate_scitiff(extract_metadata(sample_image))
+    validate_scitiff_metadata_container(extract_metadata(sample_image))

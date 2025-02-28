@@ -2,8 +2,8 @@
 # Copyright (c) 2025 Ess-dmsc-dram contributors (https://github.com/ess-dmsc-dram)
 from jsonschema import validate
 
-from ._resources import SCITIFF_METADATA_SCHEMA
+from ._resources import SCITIFF_METADATA_CONTAINER_SCHEMA
 
 
-def validate_scitiff(instance: dict) -> None:
-    validate(instance, SCITIFF_METADATA_SCHEMA)
+def validate_scitiff_metadata_container(instance: dict) -> None:
+    validate(instance, SCITIFF_METADATA_CONTAINER_SCHEMA)

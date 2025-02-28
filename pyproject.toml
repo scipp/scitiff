@@ -33,6 +33,7 @@ dependencies = [
     "scipp",
     "tifffile",
     "jsonschema",
+    "pydantic",
 ]
 
 dynamic = ["version"]
@@ -44,6 +45,8 @@ test = [
 gui = [
     "textual",
 ]
+[project.scripts]
+scitiff-dev-dump-schemas = "scitiff._schema:dump_schemas"
 
 [project.urls]
 "Bug Tracker" = "https://github.com/ess-dmsc-dram/scitiff/issues"

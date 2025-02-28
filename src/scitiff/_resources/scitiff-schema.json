@@ -1,0 +1,186 @@
+{
+  "$defs": {
+    "SciTiffMetadata": {
+      "description": "SCITIFF Metadata.",
+      "properties": {
+        "image": {
+          "$ref": "#/$defs/ScippDataArrayMetadata"
+        },
+        "schema_version": {
+          "default": "{VERSION_PLACEHOLDER}",
+          "title": "Schema Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "image"
+      ],
+      "title": "SciTiffMetadata",
+      "type": "object"
+    },
+    "ScippDataArrayMetadata": {
+      "description": "Scipp DataArray Metadata without values(image).",
+      "properties": {
+        "data": {
+          "$ref": "#/$defs/ScippVariableMetadata"
+        },
+        "masks": {
+          "additionalProperties": {
+            "$ref": "#/$defs/ScippVariable"
+          },
+          "title": "Masks",
+          "type": "object"
+        },
+        "coords": {
+          "additionalProperties": {
+            "$ref": "#/$defs/ScippVariable"
+          },
+          "title": "Coords",
+          "type": "object"
+        },
+        "name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Name"
+        }
+      },
+      "required": [
+        "data"
+      ],
+      "title": "ScippDataArrayMetadata",
+      "type": "object"
+    },
+    "ScippVariable": {
+      "description": "Scipp Variable Metadata with the values.",
+      "properties": {
+        "dims": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Dims",
+          "type": "array"
+        },
+        "shape": {
+          "items": {
+            "type": "integer"
+          },
+          "title": "Shape",
+          "type": "array"
+        },
+        "unit": {
+          "title": "Unit",
+          "type": "string"
+        },
+        "dtype": {
+          "title": "Dtype",
+          "type": "string"
+        },
+        "variance": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "number"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Variance"
+        },
+        "values": {
+          "items": {
+            "type": "number"
+          },
+          "title": "Values",
+          "type": "array"
+        }
+      },
+      "required": [
+        "dims",
+        "shape",
+        "unit",
+        "dtype",
+        "values"
+      ],
+      "title": "ScippVariable",
+      "type": "object"
+    },
+    "ScippVariableMetadata": {
+      "description": "Scipp Variable Metadata without the values.",
+      "properties": {
+        "dims": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Dims",
+          "type": "array"
+        },
+        "shape": {
+          "items": {
+            "type": "integer"
+          },
+          "title": "Shape",
+          "type": "array"
+        },
+        "unit": {
+          "title": "Unit",
+          "type": "string"
+        },
+        "dtype": {
+          "title": "Dtype",
+          "type": "string"
+        },
+        "variance": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "number"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Variance"
+        }
+      },
+      "required": [
+        "dims",
+        "shape",
+        "unit",
+        "dtype"
+      ],
+      "title": "ScippVariableMetadata",
+      "type": "object"
+    }
+  },
+  "description": "SCITIFF object.",
+  "properties": {
+    "metadata": {
+      "$ref": "#/$defs/SciTiffMetadata"
+    },
+    "data": {
+      "items": {},
+      "title": "Data",
+      "type": "array"
+    }
+  },
+  "required": [
+    "metadata",
+    "data"
+  ],
+  "title": "SciTiff",
+  "type": "object"
+}
