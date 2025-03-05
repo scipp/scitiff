@@ -70,7 +70,7 @@ def extract_metadata(dg: sc.DataGroup | sc.DataArray) -> SciTiffMetadataContaine
     return SciTiffMetadataContainer(scitiffmeta=SciTiffMetadata(image=_metadata))
 
 
-def _ensure_dimension_order(da: sc.DataArray) -> sc.DataArray:
+def to_scitiff_image(da: sc.DataArray) -> sc.DataArray:
     default_sizes = {"x": 1, "y": 1, "z": 1, "t": 1, "c": 1}
     final_sizes = {**default_sizes, **da.sizes}
     # Order of the dimensions is according to the HyperStacks tiff format.
@@ -86,7 +86,7 @@ def _ensure_dimension_order(da: sc.DataArray) -> sc.DataArray:
 
 
 def _export_data_array(da: sc.DataArray, file_path: str | pathlib.Path) -> None:
-    final_image = _ensure_dimension_order(da)
+    final_image = to_scitiff_image(da)
     metadata = extract_metadata(final_image)
     tf.imwrite(
         file_path,
