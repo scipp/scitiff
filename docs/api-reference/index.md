@@ -20,6 +20,7 @@
    export_scitiff
    load_scitiff
    validate_scitiff
+   validate_scitiff_metadata_container
 ```
 
 ## Submodules

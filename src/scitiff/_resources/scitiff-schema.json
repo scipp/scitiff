@@ -1,28 +1,10 @@
 {
   "$defs": {
-    "SciTiffMetadata": {
-      "description": "SCITIFF Metadata.",
-      "properties": {
-        "image": {
-          "$ref": "#/$defs/ScippDataArrayMetadata"
-        },
-        "schema_version": {
-          "default": "{VERSION_PLACEHOLDER}",
-          "title": "Schema Version",
-          "type": "string"
-        }
-      },
-      "required": [
-        "image"
-      ],
-      "title": "SciTiffMetadata",
-      "type": "object"
-    },
-    "ScippDataArrayMetadata": {
-      "description": "Scipp DataArray Metadata without values(image).",
+    "ImageDataArrayMetadata": {
+      "description": "Image DataArray Metadata without values(image).",
       "properties": {
         "data": {
-          "$ref": "#/$defs/ScippVariableMetadata"
+          "$ref": "#/$defs/ImageVariableMetadata"
         },
         "masks": {
           "additionalProperties": {
@@ -54,7 +36,112 @@
       "required": [
         "data"
       ],
-      "title": "ScippDataArrayMetadata",
+      "title": "ImageDataArrayMetadata",
+      "type": "object"
+    },
+    "ImageVariableMetadata": {
+      "description": "Image Metadata.",
+      "properties": {
+        "dims": {
+          "maxItems": 5,
+          "minItems": 5,
+          "prefixItems": [
+            {
+              "const": "c",
+              "type": "string"
+            },
+            {
+              "const": "t",
+              "type": "string"
+            },
+            {
+              "const": "z",
+              "type": "string"
+            },
+            {
+              "const": "y",
+              "type": "string"
+            },
+            {
+              "const": "x",
+              "type": "string"
+            }
+          ],
+          "title": "Dims",
+          "type": "array"
+        },
+        "shape": {
+          "maxItems": 5,
+          "minItems": 5,
+          "prefixItems": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "integer"
+            },
+            {
+              "type": "integer"
+            },
+            {
+              "type": "integer"
+            },
+            {
+              "type": "integer"
+            }
+          ],
+          "title": "Shape",
+          "type": "array"
+        },
+        "unit": {
+          "title": "Unit",
+          "type": "string"
+        },
+        "dtype": {
+          "title": "Dtype",
+          "type": "string"
+        },
+        "variance": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "number"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Variance"
+        }
+      },
+      "required": [
+        "dims",
+        "shape",
+        "unit",
+        "dtype"
+      ],
+      "title": "ImageVariableMetadata",
+      "type": "object"
+    },
+    "SciTiffMetadata": {
+      "description": "SCITIFF Metadata.",
+      "properties": {
+        "image": {
+          "$ref": "#/$defs/ImageDataArrayMetadata"
+        },
+        "schema_version": {
+          "default": "{VERSION_PLACEHOLDER}",
+          "title": "Schema Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "image"
+      ],
+      "title": "SciTiffMetadata",
       "type": "object"
     },
     "ScippVariable": {
@@ -113,56 +200,6 @@
         "values"
       ],
       "title": "ScippVariable",
-      "type": "object"
-    },
-    "ScippVariableMetadata": {
-      "description": "Scipp Variable Metadata without the values.",
-      "properties": {
-        "dims": {
-          "items": {
-            "type": "string"
-          },
-          "title": "Dims",
-          "type": "array"
-        },
-        "shape": {
-          "items": {
-            "type": "integer"
-          },
-          "title": "Shape",
-          "type": "array"
-        },
-        "unit": {
-          "title": "Unit",
-          "type": "string"
-        },
-        "dtype": {
-          "title": "Dtype",
-          "type": "string"
-        },
-        "variance": {
-          "anyOf": [
-            {
-              "items": {
-                "type": "number"
-              },
-              "type": "array"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "title": "Variance"
-        }
-      },
-      "required": [
-        "dims",
-        "shape",
-        "unit",
-        "dtype"
-      ],
-      "title": "ScippVariableMetadata",
       "type": "object"
     }
   },

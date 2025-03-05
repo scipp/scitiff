@@ -1,14 +1,25 @@
 # SPDX-License-Identifier: BSD-3-Clause
 # Copyright (c) 2025 Ess-dmsc-dram contributors (https://github.com/ess-dmsc-dram)
 
+from typing import Literal
+
 from pydantic import BaseModel, Field
+
+SCITIFF_IMAGE_STACK_DIMENSIONS = ("c", "t", "z", "y", "x")
+"""The order of the dimensions in the image stack.
+
+The order is from the fastest changing dimension to the slowest changing dimension.
+i.e. image[0] is image stack of the first channel.
+It is inherited from ImageJ Hyperstack.
+
+"""
 
 
 class ScippVariableMetadata(BaseModel):
     """Scipp Variable Metadata without the values."""
 
-    dims: list[str]
-    shape: list[int]
+    dims: tuple[str, ...]
+    shape: tuple[int, ...]
     unit: str
     dtype: str
     variance: list[float] | None = None
@@ -20,6 +31,14 @@ class ScippVariable(ScippVariableMetadata):
     values: list[float]
 
 
+class ImageVariableMetadata(ScippVariableMetadata):
+    """Image Metadata."""
+
+    dims: tuple[Literal["c"], Literal["t"], Literal["z"], Literal["y"], Literal["x"]]
+    """Scitiff image stack has the fixed number and order of dimensions."""
+    shape: tuple[int, int, int, int, int]
+
+
 class ScippDataArrayMetadata(BaseModel):
     """Scipp DataArray Metadata without values(image)."""
 
@@ -27,6 +46,12 @@ class ScippDataArrayMetadata(BaseModel):
     masks: dict[str, ScippVariable] = Field(default_factory=dict)
     coords: dict[str, ScippVariable] = Field(default_factory=dict)
     name: str | None = None
+
+
+class ImageDataArrayMetadata(ScippDataArrayMetadata):
+    """Image DataArray Metadata without values(image)."""
+
+    data: ImageVariableMetadata
 
 
 class ScippDataArray(ScippDataArrayMetadata):
@@ -38,11 +63,11 @@ class ScippDataArray(ScippDataArrayMetadata):
 class SciTiffMetadata(BaseModel):
     """SCITIFF Metadata."""
 
-    image: ScippDataArrayMetadata
+    image: ImageDataArrayMetadata
     schema_version: str = "{VERSION_PLACEHOLDER}"
 
 
-class SciTiffCompatibleMetadata(BaseModel):
+class SciTiffMetadataContainer(BaseModel):
     """SCITIFF Compatible Metadata."""
 
     scitiffmeta: SciTiffMetadata
@@ -62,7 +87,7 @@ def dump_schemas():
     import pathlib
 
     # Dump metadata schema
-    scitiff_metadata_schema = SciTiffCompatibleMetadata.model_json_schema()
+    scitiff_metadata_schema = SciTiffMetadataContainer.model_json_schema()
     metadata_json_path = (
         pathlib.Path(__file__).parent / "_resources/metadata-schema.json"
     )

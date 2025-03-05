@@ -12,4 +12,4 @@ except importlib.metadata.PackageNotFoundError:
 del importlib
 
 from .io import export_scitiff, load_scitiff
-from .validator import validate_scitiff_metadata_container
+from .validator import validate_scitiff, validate_scitiff_metadata_container

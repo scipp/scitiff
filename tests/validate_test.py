@@ -27,4 +27,8 @@ def sample_image() -> sc.DataArray:
 
 
 def test_validation(sample_image) -> None:
-    validate_scitiff_metadata_container(extract_metadata(sample_image))
+    validate_scitiff_metadata_container(
+        extract_metadata(sample_image).model_dump(mode='json')
+        # If the mode is not 'json', the test will fail because it will contain
+        # tuples, which will not validate as an array.
+    )
