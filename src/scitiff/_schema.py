@@ -22,13 +22,29 @@ class ScippVariableMetadata(BaseModel):
     shape: tuple[int, ...]
     unit: str
     dtype: str
-    variance: list[float] | None = None
+    variances: (
+        list[float]
+        | list[list[float]]
+        | list[list[list[float]]]
+        | list[list[list[list[float]]]]
+        | list[list[list[list[list[float]]]]]
+    ) | None = None
 
 
 class ScippVariable(ScippVariableMetadata):
-    """Scipp Variable Metadata with the values."""
+    """Scipp Variable Metadata with the values.
 
-    values: list[float]
+    Up to 5D data is supported.
+    """
+
+    values: (
+        list[float]
+        | list[list[float]]
+        | list[list[list[float]]]
+        | list[list[list[list[float]]]]
+        | list[list[list[list[list[float]]]]]
+    )
+    """The values of the variable."""
 
 
 class ImageVariableMetadata(ScippVariableMetadata):
