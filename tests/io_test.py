@@ -44,7 +44,7 @@ def sample_image_2d_coordinate(sample_image: sc.DataArray) -> sc.DataArray:
     return new_image
 
 
-def test_export_multi_dimension_coordinate_warns(sample_image_2d_coordinate) -> None:
+def test_export_multi_dimension_coordinate_raises(sample_image_2d_coordinate) -> None:
     with pytest.raises(
         ValueError, match='Only 1-dimensional variable is allowed for metadata.'
     ):
