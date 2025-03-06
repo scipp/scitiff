@@ -23,28 +23,15 @@ class ScippVariableMetadata(BaseModel):
     shape: tuple[int, ...]
     unit: str
     dtype: str
-    variances: (
-        list[float]
-        | list[list[float]]
-        | list[list[list[float]]]
-        | list[list[list[list[float]]]]
-        | list[list[list[list[list[float]]]]]
-    ) | None = None
 
 
 class ScippVariable(ScippVariableMetadata):
     """Scipp Variable Metadata with the values.
 
-    Up to 5D data is supported.
+    Only 1D variable is allowed for metadata.
     """
 
-    values: (
-        list[float]
-        | list[list[float]]
-        | list[list[list[float]]]
-        | list[list[list[list[float]]]]
-        | list[list[list[list[list[float]]]]]
-    )
+    values: list[float]
     """The values of the variable."""
 
 
@@ -55,8 +42,6 @@ class ImageVariableMetadata(ScippVariableMetadata):
     """Scitiff image stack has the fixed number and order of dimensions."""
     shape: tuple[int, int, int, int, int]
     """The shape of the image data."""
-    variances: list[list[list[list[list[float]]]]] | None = None
-    """The variances of the image data."""
 
 
 class ScippDataArrayMetadata(BaseModel):
@@ -64,7 +49,9 @@ class ScippDataArrayMetadata(BaseModel):
 
     data: ScippVariableMetadata
     masks: dict[str, ScippVariable] = Field(default_factory=dict)
+    """Only 1-dimensional masks are supported for metadata."""
     coords: dict[str, ScippVariable] = Field(default_factory=dict)
+    """Only 1-dimensional coordinates are supported for metadata."""
     name: str | None = None
 
 
