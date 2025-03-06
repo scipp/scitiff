@@ -53,6 +53,9 @@ class ImageVariableMetadata(ScippVariableMetadata):
     dims: tuple[Literal["c"], Literal["t"], Literal["z"], Literal["y"], Literal["x"]]
     """Scitiff image stack has the fixed number and order of dimensions."""
     shape: tuple[int, int, int, int, int]
+    """The shape of the image data."""
+    variances: list[list[list[list[list[float]]]]] | None = None
+    """The variances of the image data."""
 
 
 class ScippDataArrayMetadata(BaseModel):
