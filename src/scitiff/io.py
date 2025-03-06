@@ -131,6 +131,15 @@ def _read_image_as_dataarray(
         dtype=image_metadata.data.dtype,
     )
     tf.imread(file_path, squeeze=False, out=image.values)
+    # We are loading image directly to the allocated array.
+    # In this way we save memory and time.
+    # Also, ``tifffile.imread`` adds one extra dimension
+    # when loading the image into numpy array but in this way
+    # the data is directly loaded into the exact shape.
+    # Therefore we manually build the DataArray
+    # instead of using ``scipp.from_dict`` function.
+    # However, each coordinate and mask is loaded using ``from_dict`` function
+    # since they are serialized as dictionaries.
     coords = {
         key: from_dict(value.model_dump())
         for key, value in image_metadata.coords.items()
