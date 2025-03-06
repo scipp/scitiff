@@ -3,6 +3,7 @@
 import json
 import pathlib
 
+import pydantic
 import scipp as sc
 import tifffile as tf
 from scipp.compat.dict import from_dict
@@ -18,15 +19,10 @@ from ._schema import (
 
 
 def _scipp_variable_to_model(var: sc.Variable) -> ScippVariable:
-    import warnings
-
     if var.ndim > 1:
-        warnings.warn(
-            "The variable has more than 1 dimension. "
-            "Variables for metadata should not take too much space. "
-            "Consider using single dimension variable for metadata.",
-            ResourceWarning,
-            stacklevel=2,
+        raise ValueError(
+            "Only 1-dimensional variable is allowed for metadata. "
+            "The variable has more than 1 dimension."
         )
     return ScippVariable(
         dims=tuple(var.dims),
@@ -115,31 +111,55 @@ def export_scitiff(
         _export_data_group(dg, file_path)
 
 
-def load_scitiff(file_path: str | pathlib.Path, squeeze: bool = True) -> sc.DataGroup:
-    with tf.TiffFile(file_path) as tif:
-        container = SciTiffMetadataContainer(
-            scitiffmeta=json.loads(tif.imagej_metadata["scitiffmeta"])
-        )
+def _is_nested_value(
+    model_fields: dict[str, pydantic.fields.FieldInfo], key: str
+) -> bool:
+    return (
+        key in model_fields
+        and (field_type := model_fields[key].annotation) is not None
+        and issubclass(field_type, pydantic.BaseModel)
+    )
 
-    img_metadata = container.scitiffmeta.image
+
+def _read_image_as_dataarray(
+    image_metadata: ImageDataArrayMetadata, file_path: str | pathlib.Path
+) -> sc.DataArray:
     image = sc.zeros(
-        dims=[*img_metadata.data.dims],
-        shape=[*img_metadata.data.shape],
-        unit=img_metadata.data.unit,
-        dtype=img_metadata.data.dtype,
+        dims=[*image_metadata.data.dims],
+        shape=[*image_metadata.data.shape],
+        unit=image_metadata.data.unit,
+        dtype=image_metadata.data.dtype,
     )
     tf.imread(file_path, squeeze=False, out=image.values)
     coords = {
-        key: from_dict(value.model_dump()) for key, value in img_metadata.coords.items()
+        key: from_dict(value.model_dump())
+        for key, value in image_metadata.coords.items()
     }
     masks = {
-        key: from_dict(value.model_dump()) for key, value in img_metadata.masks.items()
+        key: from_dict(value.model_dump())
+        for key, value in image_metadata.masks.items()
     }
-    image_da = sc.DataArray(
-        data=image, coords=coords, masks=masks, name=img_metadata.name or ''
+    return sc.DataArray(
+        data=image, coords=coords, masks=masks, name=image_metadata.name or ''
     )
-    return (
-        sc.DataGroup(image=image_da.squeeze())
-        if squeeze
-        else sc.DataGroup(image=image_da)
-    )
+
+
+def load_scitiff(file_path: str | pathlib.Path, squeeze: bool = True) -> sc.DataGroup:
+    with tf.TiffFile(file_path) as tif:
+        if tif.imagej_metadata is None:
+            raise ValueError(
+                f"ImageJ metadata is not found in the tiff file: {file_path}"
+            )
+        loaded_metadata = {
+            key: json.loads(value)
+            if _is_nested_value(SciTiffMetadataContainer.model_fields, key)
+            else value
+            for key, value in tif.imagej_metadata.items()
+        }
+        container = SciTiffMetadataContainer(**loaded_metadata)
+
+    image_da = _read_image_as_dataarray(container.scitiffmeta.image, file_path)
+    if squeeze:
+        image_da = image_da.squeeze()
+
+    return sc.DataGroup(image=image_da)
