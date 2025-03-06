@@ -3,6 +3,7 @@
 import pytest
 import scipp as sc
 
+from scitiff import SCITIFF_IMAGE_STACK_DIMENSIONS
 from scitiff.io import export_scitiff, load_scitiff
 
 
@@ -44,5 +45,14 @@ def sample_image_2d_coordinate(sample_image: sc.DataArray) -> sc.DataArray:
 
 
 def test_export_multi_dimension_coordinate_warns(sample_image_2d_coordinate) -> None:
-    with pytest.warns(ResourceWarning):
+    with pytest.raises(
+        ValueError, match='Only 1-dimensional variable is allowed for metadata.'
+    ):
         export_scitiff(sample_image_2d_coordinate, 'test.tiff')
+
+
+def test_load_squeeze_false(sample_image, tmp_path) -> None:
+    tmp_file_path = tmp_path / 'test.tiff'
+    export_scitiff(sample_image, tmp_file_path)
+    loaded_image = load_scitiff(tmp_file_path, squeeze=False)
+    assert loaded_image.dims == SCITIFF_IMAGE_STACK_DIMENSIONS
