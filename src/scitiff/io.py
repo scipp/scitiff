@@ -34,7 +34,6 @@ def _scipp_variable_to_model(var: sc.Variable) -> ScippVariable:
         shape=tuple(var.shape),
         unit=str(var.unit),
         values=var.values.tolist(),
-        variances=None if var.variances is None else var.variances.tolist(),
     )
 
 
@@ -46,7 +45,6 @@ def _scipp_variable_to_metadata_model(var: sc.Variable) -> ImageVariableMetadata
         dtype=str(var.dtype),
         shape=tuple(var.shape),
         unit=str(var.unit),
-        variances=None if var.variances is None else var.variances.tolist(),
     )
 
 
@@ -123,23 +121,25 @@ def load_scitiff(file_path: str | pathlib.Path, squeeze: bool = True) -> sc.Data
             scitiffmeta=json.loads(tif.imagej_metadata["scitiffmeta"])
         )
 
-    metadata = container.scitiffmeta
-    metadata_dict = metadata.model_dump(mode="json")
-
-    img = tf.imread(file_path, squeeze=False)
-    if img.ndim == 6 and img.shape[-1] == 1:
-        # Grey scale image automatically wrap a pixel in a list
-        # so we need to remove the extra dimension
-        img = img.squeeze(axis=-1)
-
-    image_as_dict = metadata_dict["image"]
-    image_as_dict["data"]["values"] = img
-    image_da = from_dict(image_as_dict)
-    if squeeze:
-        # Squeeze the dimensions with size 1
-        to_be_squeezed_dims = tuple(
-            dim for dim, size in image_da.sizes.items() if size == 1
-        )
-        image_da = image_da.squeeze(dim=to_be_squeezed_dims)
-
-    return sc.DataGroup(image=image_da)
+    img_metadata = container.scitiffmeta.image
+    image = sc.zeros(
+        dims=[*img_metadata.data.dims],
+        shape=[*img_metadata.data.shape],
+        unit=img_metadata.data.unit,
+        dtype=img_metadata.data.dtype,
+    )
+    tf.imread(file_path, squeeze=False, out=image.values)
+    coords = {
+        key: from_dict(value.model_dump()) for key, value in img_metadata.coords.items()
+    }
+    masks = {
+        key: from_dict(value.model_dump()) for key, value in img_metadata.masks.items()
+    }
+    image_da = sc.DataArray(
+        data=image, coords=coords, masks=masks, name=img_metadata.name or ''
+    )
+    return (
+        sc.DataGroup(image=image_da.squeeze())
+        if squeeze
+        else sc.DataGroup(image=image_da)
+    )
