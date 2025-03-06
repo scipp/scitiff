@@ -10,4 +10,3 @@ def _load_schema(schema_name: str) -> dict:
 
 
 SCITIFF_METADATA_CONTAINER_SCHEMA = _load_schema('metadata-schema.json')
-SCITIFF_SCHEMA = _load_schema('scitiff-schema.json')

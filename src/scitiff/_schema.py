@@ -74,18 +74,10 @@ class SciTiffMetadata(BaseModel):
     schema_version: str = "{VERSION_PLACEHOLDER}"
 
 
-class SciTiffMetadataContainer(BaseModel):
+class SciTiffMetadataContainer(BaseModel, extra="allow"):
     """SCITIFF Compatible Metadata."""
 
     scitiffmeta: SciTiffMetadata
-
-
-class SciTiff(BaseModel):
-    """SCITIFF object."""
-
-    metadata: SciTiffMetadata
-    data: list
-    """The image data in the order of the dimensions specified in the metadata."""
 
 
 def dump_schemas():
@@ -100,11 +92,3 @@ def dump_schemas():
     )
     with open(metadata_json_path, "w") as f:
         json.dump(scitiff_metadata_schema, f, indent=2)
-
-    # Dump scitiff schema
-    scitiff_schema_path = (
-        pathlib.Path(__file__).parent / "_resources/scitiff-schema.json"
-    )
-    scitiff_schema = SciTiff.model_json_schema()
-    with open(scitiff_schema_path, "w") as f:
-        json.dump(scitiff_schema, f, indent=2)

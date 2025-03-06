@@ -2,7 +2,7 @@
 # Copyright (c) 2025 Ess-dmsc-dram contributors (https://github.com/ess-dmsc-dram)
 from jsonschema import validate
 
-from ._resources import SCITIFF_METADATA_CONTAINER_SCHEMA, SCITIFF_SCHEMA
+from ._resources import SCITIFF_METADATA_CONTAINER_SCHEMA
 
 # We use the jsonschema file to validate the metadata container
 # instead of the pydantic model because the json file platform independent
@@ -43,7 +43,3 @@ def validate_scitiff_metadata_container(instance: dict) -> None:
 
     """
     validate(instance, SCITIFF_METADATA_CONTAINER_SCHEMA)
-
-
-def validate_scitiff(instance: dict) -> None:
-    validate(instance, SCITIFF_SCHEMA)

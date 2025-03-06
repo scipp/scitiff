@@ -100,33 +100,6 @@
         "dtype": {
           "title": "Dtype",
           "type": "string"
-        },
-        "variances": {
-          "anyOf": [
-            {
-              "items": {
-                "items": {
-                  "items": {
-                    "items": {
-                      "items": {
-                        "type": "number"
-                      },
-                      "type": "array"
-                    },
-                    "type": "array"
-                  },
-                  "type": "array"
-                },
-                "type": "array"
-              },
-              "type": "array"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "title": "Variances"
         }
       },
       "required": [
@@ -157,7 +130,7 @@
       "type": "object"
     },
     "ScippVariable": {
-      "description": "Scipp Variable Metadata with the values.\n\nUp to 5D data is supported.",
+      "description": "Scipp Variable Metadata with the values.\n\nOnly 1D variable is allowed for metadata.",
       "properties": {
         "dims": {
           "items": {
@@ -181,139 +154,12 @@
           "title": "Dtype",
           "type": "string"
         },
-        "variances": {
-          "anyOf": [
-            {
-              "items": {
-                "type": "number"
-              },
-              "type": "array"
-            },
-            {
-              "items": {
-                "items": {
-                  "type": "number"
-                },
-                "type": "array"
-              },
-              "type": "array"
-            },
-            {
-              "items": {
-                "items": {
-                  "items": {
-                    "type": "number"
-                  },
-                  "type": "array"
-                },
-                "type": "array"
-              },
-              "type": "array"
-            },
-            {
-              "items": {
-                "items": {
-                  "items": {
-                    "items": {
-                      "type": "number"
-                    },
-                    "type": "array"
-                  },
-                  "type": "array"
-                },
-                "type": "array"
-              },
-              "type": "array"
-            },
-            {
-              "items": {
-                "items": {
-                  "items": {
-                    "items": {
-                      "items": {
-                        "type": "number"
-                      },
-                      "type": "array"
-                    },
-                    "type": "array"
-                  },
-                  "type": "array"
-                },
-                "type": "array"
-              },
-              "type": "array"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "title": "Variances"
-        },
         "values": {
-          "anyOf": [
-            {
-              "items": {
-                "type": "number"
-              },
-              "type": "array"
-            },
-            {
-              "items": {
-                "items": {
-                  "type": "number"
-                },
-                "type": "array"
-              },
-              "type": "array"
-            },
-            {
-              "items": {
-                "items": {
-                  "items": {
-                    "type": "number"
-                  },
-                  "type": "array"
-                },
-                "type": "array"
-              },
-              "type": "array"
-            },
-            {
-              "items": {
-                "items": {
-                  "items": {
-                    "items": {
-                      "type": "number"
-                    },
-                    "type": "array"
-                  },
-                  "type": "array"
-                },
-                "type": "array"
-              },
-              "type": "array"
-            },
-            {
-              "items": {
-                "items": {
-                  "items": {
-                    "items": {
-                      "items": {
-                        "type": "number"
-                      },
-                      "type": "array"
-                    },
-                    "type": "array"
-                  },
-                  "type": "array"
-                },
-                "type": "array"
-              },
-              "type": "array"
-            }
-          ],
-          "title": "Values"
+          "items": {
+            "type": "number"
+          },
+          "title": "Values",
+          "type": "array"
         }
       },
       "required": [
@@ -327,6 +173,7 @@
       "type": "object"
     }
   },
+  "additionalProperties": true,
   "description": "SCITIFF Compatible Metadata.",
   "properties": {
     "scitiffmeta": {
