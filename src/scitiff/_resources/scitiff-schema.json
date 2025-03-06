@@ -105,48 +105,6 @@
           "anyOf": [
             {
               "items": {
-                "type": "number"
-              },
-              "type": "array"
-            },
-            {
-              "items": {
-                "items": {
-                  "type": "number"
-                },
-                "type": "array"
-              },
-              "type": "array"
-            },
-            {
-              "items": {
-                "items": {
-                  "items": {
-                    "type": "number"
-                  },
-                  "type": "array"
-                },
-                "type": "array"
-              },
-              "type": "array"
-            },
-            {
-              "items": {
-                "items": {
-                  "items": {
-                    "items": {
-                      "type": "number"
-                    },
-                    "type": "array"
-                  },
-                  "type": "array"
-                },
-                "type": "array"
-              },
-              "type": "array"
-            },
-            {
-              "items": {
                 "items": {
                   "items": {
                     "items": {
