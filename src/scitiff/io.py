@@ -8,6 +8,7 @@ import tifffile as tf
 from scipp.compat.dict import from_dict
 
 from ._schema import (
+    SCITIFF_IMAGE_STACK_DIMENSIONS,
     ImageDataArrayMetadata,
     ImageVariableMetadata,
     ScippVariable,
@@ -74,7 +75,7 @@ def to_scitiff_image(da: sc.DataArray) -> sc.DataArray:
     default_sizes = {"x": 1, "y": 1, "z": 1, "t": 1, "c": 1}
     final_sizes = {**default_sizes, **da.sizes}
     # Order of the dimensions is according to the HyperStacks tiff format.
-    order = ["c", "t", "z", "y", "x"]
+    order = SCITIFF_IMAGE_STACK_DIMENSIONS  # ("c", "t", "z", "y", "x")
     final_sizes = {key: final_sizes[key] for key in order if key in final_sizes}
     dims = tuple(final_sizes.keys())
     shape = tuple(final_sizes.values())
