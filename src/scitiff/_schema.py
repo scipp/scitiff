@@ -8,9 +8,10 @@ from pydantic import BaseModel, Field
 SCITIFF_IMAGE_STACK_DIMENSIONS = ("c", "t", "z", "y", "x")
 """The order of the dimensions in the image stack.
 
-The order is from the fastest changing dimension to the slowest changing dimension.
+The order is from the outermost dimension to the innermost dimension.
 i.e. image[0] is image stack of the first channel.
-It is inherited from ImageJ Hyperstack.
+i.e.2. image[1][0] is the first frame(t) of the second channel.
+It inherits ImageJ Hyperstack.
 
 """
 
