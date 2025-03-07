@@ -65,7 +65,19 @@ def extract_metadata(dg: sc.DataGroup | sc.DataArray) -> SciTiffMetadataContaine
     return SciTiffMetadataContainer(scitiffmeta=SciTiffMetadata(image=_metadata))
 
 
+def _validate_dimensions(da: sc.DataArray) -> None:
+    if illegal_dim := [
+        dim for dim in da.dims if dim not in SCITIFF_IMAGE_STACK_DIMENSIONS
+    ]:
+        raise ValueError(
+            f"DataArray has unexpected dimensions: {','.join(illegal_dim)}. "
+            f"Allowed dimensions are: {SCITIFF_IMAGE_STACK_DIMENSIONS} "
+            "Use `scipp.DataArray.rename_dims` to rename the dimensions."
+        )
+
+
 def to_scitiff_image(da: sc.DataArray) -> sc.DataArray:
+    _validate_dimensions(da)
     default_sizes = {"x": 1, "y": 1, "z": 1, "t": 1, "c": 1}
     final_sizes = {**default_sizes, **da.sizes}
     # Order of the dimensions is according to the HyperStacks tiff format.
