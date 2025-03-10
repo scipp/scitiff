@@ -3,6 +3,9 @@
 [![Anaconda-Server Badge](https://anaconda.org/ess-dmsc-dram/scitiff/badges/version.svg)](https://anaconda.org/ess-dmsc-dram/scitiff)
 [![License: BSD 3-Clause](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](LICENSE)
 
+[![scitiff](https://github.com/ess-dmsc-dram/scitiff/actions/workflows/nightly_at_main.yml/badge.svg?branch=main)](https://github.com/ess-dmsc-dram/scitiff/actions/workflows/nightly_at_main.yml)
+[![scitiff](https://github.com/ess-dmsc-dram/scitiff/actions/workflows/nightly_at_release.yml/badge.svg?branch=main)](https://github.com/ess-dmsc-dram/scitiff/actions/workflows/nightly_at_release.yml)
+
 # SciTiff
 
 ## About
@@ -14,3 +17,4 @@ Scientific tiff format for imaging experiments.
 ```sh
 python -m pip install scitiff
 ```
+
