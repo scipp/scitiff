@@ -124,8 +124,58 @@ def _save_data_array(da: sc.DataArray, file_path: str | pathlib.Path) -> None:
 
 
 def save_scitiff(
-    dg: sc.DataGroup | sc.DataArray, file_path: str | pathlib.Path
+    dg: sc.DataGroup | sc.DataArray, *, file_path: str | pathlib.Path
 ) -> None:
+    """Save an image in scipp data structure to a SCITIFF format including metadata.
+
+    The image is transposed to the default HyperStack order
+    before saving the image,
+    which is ``x``, ``y``, ``c``, ``z``, ``t``.
+    (From the innermost dimension to the outermost dimension)
+
+    .. note::
+        Before the image is saved, it is broadcasted to match the HyperStack
+        even if part of dimensions are not present.
+        For example, if the image has only ``x`` and ``y`` dimensions,
+        the image will be broadcasted to ``x``, ``y``, ``c``, ``z``, ``t`` dimensions
+        with size of 1 for each dimension that is not present.
+
+        .. warning::
+            Other image tools may squeeze the image
+            and drop the dimensions with size 1 by default.
+
+    .. note::
+
+        .. csv-table::  Dimensions of the image stack
+            :header: "Name", "Description"
+
+            "x",               "x-axis (width)"
+            "y",               "y-axis (height)"
+            "c",               "channel-axis"
+            "z",               "z-axis"
+            "t",               "time-axis(time-of-flight or other time-like dimension)"
+
+        .. warning::
+
+            For neutron imaging, `c` dimension may not represent color channels.
+
+
+    Parameters
+    ----------
+    dg:
+        The image data to save.
+
+    file_path:
+        The path to save the image data.
+
+    Raises
+    ------
+    ValueError
+        If the image data has unexpected dimensions.
+        The function does not understand any other names for the dimensions
+        except ``x``, ``y``, ``c``, ``z``, ``t``.
+
+    """
     if isinstance(dg, sc.DataArray):
         _save_data_array(dg, file_path)
     else:

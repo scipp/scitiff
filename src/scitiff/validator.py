@@ -27,7 +27,7 @@ def validate_scitiff_metadata_container(instance: dict) -> None:
       {
         "owner": "Sun",
         "date": "2025-01-01",
-        "scitiff": {...}
+        "scitiff": {"...": "..."}
       }
 
 
