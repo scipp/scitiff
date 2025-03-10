@@ -14,10 +14,6 @@ appnope==0.1.4
     # via ipykernel
 asttokens==3.0.0
     # via stack-data
-attrs==25.1.0
-    # via
-    #   jsonschema
-    #   referencing
 babel==2.17.0
     # via
     #   pydata-sphinx-theme
@@ -38,9 +34,9 @@ contourpy==1.3.1
     # via matplotlib
 cycler==0.12.1
     # via matplotlib
-debugpy==1.8.12
+debugpy==1.8.13
     # via ipykernel
-decorator==5.1.1
+decorator==5.2.1
     # via ipython
 defusedxml==0.7.1
     # via nbconvert
@@ -64,22 +60,18 @@ imagesize==1.4.1
     # via sphinx
 ipykernel==6.29.5
     # via -r docs.in
-ipython==8.32.0
+ipython==8.34.0
     # via
     #   -r docs.in
     #   ipykernel
 jedi==0.19.2
     # via ipython
-jinja2==3.1.5
+jinja2==3.1.6
     # via
     #   myst-parser
     #   nbconvert
     #   nbsphinx
     #   sphinx
-jsonschema==4.23.0
-    # via nbformat
-jsonschema-specifications==2024.10.1
-    # via jsonschema
 jupyter-client==8.6.3
     # via
     #   ipykernel
@@ -95,6 +87,8 @@ jupyterlab-pygments==0.3.0
     # via nbconvert
 kiwisolver==1.4.8
     # via matplotlib
+lazy-loader==0.4
+    # via plopp
 markdown-it-py==3.0.0
     # via
     #   mdit-py-plugins
@@ -103,7 +97,7 @@ markupsafe==3.0.2
     # via
     #   jinja2
     #   nbconvert
-matplotlib==3.10.0
+matplotlib==3.10.1
     # via plopp
 matplotlib-inline==0.1.7
     # via
@@ -126,13 +120,14 @@ nbformat==5.10.4
     #   nbclient
     #   nbconvert
     #   nbsphinx
-nbsphinx==0.9.6
+nbsphinx==0.9.7
     # via -r docs.in
 nest-asyncio==1.6.0
     # via ipykernel
 packaging==24.2
     # via
     #   ipykernel
+    #   lazy-loader
     #   matplotlib
     #   nbconvert
     #   sphinx
@@ -146,7 +141,7 @@ pillow==11.1.0
     # via matplotlib
 platformdirs==4.3.6
     # via jupyter-core
-plopp==24.10.0
+plopp==25.2.0
     # via -r docs.in
 prompt-toolkit==3.0.50
     # via ipython
@@ -177,16 +172,8 @@ pyzmq==26.2.1
     # via
     #   ipykernel
     #   jupyter-client
-referencing==0.36.2
-    # via
-    #   jsonschema
-    #   jsonschema-specifications
 requests==2.32.3
     # via sphinx
-rpds-py==0.23.0
-    # via
-    #   jsonschema
-    #   referencing
 six==1.17.0
     # via python-dateutil
 snowballstemmer==2.2.0
@@ -242,13 +229,6 @@ traitlets==5.14.3
     #   nbconvert
     #   nbformat
     #   nbsphinx
-typing-extensions==4.12.2
-    # via
-    #   beautifulsoup4
-    #   ipython
-    #   mistune
-    #   pydata-sphinx-theme
-    #   referencing
 urllib3==2.3.0
     # via requests
 wcwidth==0.2.13
