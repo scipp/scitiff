@@ -3,7 +3,7 @@
 import pytest
 import scipp as sc
 
-from scitiff import validate_scitiff
+from scitiff import validate_scitiff_metadata_container
 from scitiff.io import extract_metadata
 
 
@@ -27,4 +27,17 @@ def sample_image() -> sc.DataArray:
 
 
 def test_validation(sample_image) -> None:
-    validate_scitiff(extract_metadata(sample_image))
+    import pydantic
+
+    from scitiff.io import to_scitiff_image
+
+    with pytest.raises(pydantic.ValidationError):
+        # Not a valid scitiff image yet
+        extract_metadata(sample_image)
+
+    exportable_image = to_scitiff_image(sample_image)
+    validate_scitiff_metadata_container(
+        extract_metadata(exportable_image).model_dump(mode='json')
+        # If the mode is not 'json', the test will fail because it will contain
+        # tuples, which will not validate as an array.
+    )

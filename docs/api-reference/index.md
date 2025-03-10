@@ -9,6 +9,7 @@
    :toctree: ../generated/classes
    :template: class-template.rst
    :recursive:
+
 ```
 
 ## Top-level functions
@@ -17,9 +18,11 @@
 .. autosummary::
    :toctree: ../generated/functions
    :recursive:
-   export_scitiff
+
+   save_scitiff
    load_scitiff
-   validate_scitiff
+   validate_scitiff_metadata_container
+
 ```
 
 ## Submodules
@@ -29,4 +32,9 @@
    :toctree: ../generated/modules
    :template: module-template.rst
    :recursive:
+
+   io
+   validator
+   data
+
 ```

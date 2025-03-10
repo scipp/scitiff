@@ -11,5 +11,10 @@ except importlib.metadata.PackageNotFoundError:
 
 del importlib
 
-from .io import export_scitiff, load_scitiff
-from .validator import validate_scitiff
+from ._schema import (
+    SCITIFF_IMAGE_STACK_DIMENSIONS,
+    SciTiffMetadata,
+    SciTiffMetadataContainer,
+)
+from .io import load_scitiff, save_scitiff
+from .validator import validate_scitiff_metadata_container
