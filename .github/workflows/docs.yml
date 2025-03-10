@@ -69,7 +69,8 @@ jobs:
         with:
           name: docs_html
           path: html/
-      - run: echo "::notice::https://remote-unzip.deno.dev/${{ github.repository }}/artifacts/${{ steps.artifact-upload-step.outputs.artifact-id }}"
+      - run: echo "::notice::[https://remote-unzip.deno.dev/${{ github.repository }}/artifacts/${{ steps.artifact-upload-step.outputs.artifact-id }}](https://remote-unzip.deno.dev/${{ github.repository }}/artifacts/${{ steps.artifact-upload-step.outputs.artifact-id }})"
+
 
       - uses: JamesIves/github-pages-deploy-action@v4.7.3
         if: ${{ inputs.publish }}
