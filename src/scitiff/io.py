@@ -124,7 +124,7 @@ def _save_data_array(da: sc.DataArray, file_path: str | pathlib.Path) -> None:
 
 
 def save_scitiff(
-    dg: sc.DataGroup | sc.DataArray, *, file_path: str | pathlib.Path
+    dg: sc.DataGroup | sc.DataArray, file_path: str | pathlib.Path
 ) -> None:
     """Save an image in scipp data structure to a SCITIFF format including metadata.
 
@@ -141,7 +141,9 @@ def save_scitiff(
         with size of 1 for each dimension that is not present.
 
         .. warning::
-            Other image tools may squeeze the image
+            :func:`load_scitiff` function will squeeze the dimensions
+            with size 1 by default.
+            Other image tools also may squeeze the image
             and drop the dimensions with size 1 by default.
 
     .. note::
@@ -149,15 +151,15 @@ def save_scitiff(
         .. csv-table::  Dimensions of the image stack
             :header: "Name", "Description"
 
-            "x",               "x-axis (width)"
-            "y",               "y-axis (height)"
-            "c",               "channel-axis"
-            "z",               "z-axis"
-            "t",               "time-axis(time-of-flight or other time-like dimension)"
+                     "x",    "x-axis (width)"
+                     "y",    "y-axis (height)"
+                     "c",    "channel-axis"
+                     "z",    "z-axis"
+                     "t",    "time-axis(time-of-flight or other time-like dimension)"
 
         .. warning::
 
-            For neutron imaging, `c` dimension may not represent color channels.
+            For neutron imaging, ``c`` dimension may not represent color channels.
 
 
     Parameters
@@ -224,7 +226,30 @@ def _read_image_as_dataarray(
     )
 
 
-def load_scitiff(file_path: str | pathlib.Path, squeeze: bool = True) -> sc.DataGroup:
+def load_scitiff(
+    file_path: str | pathlib.Path, *, squeeze: bool = True
+) -> sc.DataGroup:
+    """Load an image in SCITIFF format to a scipp data structure.
+
+    Parameters
+    ----------
+    file_path:
+        The path to the SCITIFF format image file.
+
+    squeeze:
+        If True, the dimensions with size 1 are squeezed out.
+        You can also do it manually using ``sc.DataArray.squeeze`` method.
+
+    Returns
+    -------
+    :
+        The loaded image data in ``scipp.DataGroup``.
+        The data group should have the same structure
+        as the :class:`scitiff.SciTiffMetadataContainer` except
+        the image data has values loaded from the tiff file
+        not just the metadata.
+
+    """
     with tf.TiffFile(file_path) as tif:
         if tif.imagej_metadata is None:
             raise ValueError(
