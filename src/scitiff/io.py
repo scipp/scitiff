@@ -105,7 +105,7 @@ def to_scitiff_image(da: sc.DataArray) -> sc.DataArray:
     return sc.broadcast(da, sizes=sizes)
 
 
-def _export_data_array(da: sc.DataArray, file_path: str | pathlib.Path) -> None:
+def _save_data_array(da: sc.DataArray, file_path: str | pathlib.Path) -> None:
     final_image = to_scitiff_image(da)
     metadata = extract_metadata(final_image)
     tf.imwrite(
@@ -123,15 +123,13 @@ def _export_data_array(da: sc.DataArray, file_path: str | pathlib.Path) -> None:
     )
 
 
-def export_scitiff(
+def save_scitiff(
     dg: sc.DataGroup | sc.DataArray, file_path: str | pathlib.Path
 ) -> None:
     if isinstance(dg, sc.DataArray):
-        _export_data_array(dg, file_path)
+        _save_data_array(dg, file_path)
     else:
-        raise NotImplementedError(
-            "Exporting DataGroup to SCITIFF is not yet implemented."
-        )
+        raise NotImplementedError("Saving DataGroup to SCITIFF is not yet implemented.")
 
 
 def _is_nested_value(
