@@ -5,13 +5,13 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
-SCITIFF_IMAGE_STACK_DIMENSIONS = ("c", "t", "z", "y", "x")
+SCITIFF_IMAGE_STACK_DIMENSIONS = ("t", "z", "c", "y", "x")
 """The order of the dimensions in the image stack.
 
 The order is from the outermost dimension to the innermost dimension.
 i.e. image[0] is image stack of the first channel.
 i.e.2. image[1][0] is the first frame(t) of the second channel.
-It inherits ImageJ Hyperstack.
+It is ImageJ Hyperstack default dimension order.
 
 """
 
@@ -21,7 +21,7 @@ class ScippVariableMetadata(BaseModel):
 
     dims: tuple[str, ...]
     shape: tuple[int, ...]
-    unit: str
+    unit: str | None
     dtype: str
 
 
@@ -31,14 +31,14 @@ class ScippVariable(ScippVariableMetadata):
     Only 1D variable is allowed for metadata.
     """
 
-    values: list[float]
+    values: list[float] | list[str]
     """The values of the variable."""
 
 
 class ImageVariableMetadata(ScippVariableMetadata):
     """Image Metadata."""
 
-    dims: tuple[Literal["c"], Literal["t"], Literal["z"], Literal["y"], Literal["x"]]
+    dims: tuple[Literal["t"], Literal["z"], Literal["c"], Literal["y"], Literal["x"]]
     """Scitiff image stack has the fixed number and order of dimensions."""
     shape: tuple[int, int, int, int, int]
     """The shape of the image data."""

@@ -18,18 +18,30 @@ from ._schema import (
 )
 
 
+def _wrap_unit(unit: str | None) -> str | None:
+    # str(None), which is `None` is interpreted as `N` (neuton) when
+    # it is loaded back from the json file.
+    return str(unit) if unit is not None else None
+
+
 def _scipp_variable_to_model(var: sc.Variable) -> ScippVariable:
     if var.ndim > 1:
         raise ValueError(
             "Only 1-dimensional variable is allowed for metadata. "
             "The variable has more than 1 dimension."
         )
+    # string values does not have `tolist` method
+    if hasattr(var, "values") and hasattr(var.values, "tolist"):
+        values = var.values.tolist()
+    else:
+        values = list(var.values)
+
     return ScippVariable(
-        dims=tuple(var.dims),
+        dims=var.dims,
         dtype=str(var.dtype),
-        shape=tuple(var.shape),
-        unit=str(var.unit),
-        values=var.values.tolist(),
+        shape=var.shape,
+        unit=_wrap_unit(var.unit),
+        values=values,
     )
 
 
@@ -37,10 +49,7 @@ def _scipp_variable_to_metadata_model(var: sc.Variable) -> ImageVariableMetadata
     # Image data variable should have more than 1 dimension
     # So we do not warn the user about the multi-dimensional variable
     return ImageVariableMetadata(
-        dims=tuple(var.dims),
-        dtype=str(var.dtype),
-        shape=tuple(var.shape),
-        unit=str(var.unit),
+        dims=var.dims, dtype=str(var.dtype), shape=var.shape, unit=_wrap_unit(var.unit)
     )
 
 
@@ -76,13 +85,17 @@ def _validate_dimensions(da: sc.DataArray) -> None:
         )
 
 
+def _ensure_hyperstack_sizes_default_order(sizes: dict) -> dict:
+    # Order of the dimensions is according to the HyperStacks tiff format.
+    order = SCITIFF_IMAGE_STACK_DIMENSIONS
+    default_sizes = {"x": 1, "y": 1, "z": 1, "t": 1, "c": 1}
+    final_sizes = {**default_sizes, **sizes}
+    return {key: final_sizes[key] for key in order if key in final_sizes}
+
+
 def to_scitiff_image(da: sc.DataArray) -> sc.DataArray:
     _validate_dimensions(da)
-    default_sizes = {"x": 1, "y": 1, "z": 1, "t": 1, "c": 1}
-    final_sizes = {**default_sizes, **da.sizes}
-    # Order of the dimensions is according to the HyperStacks tiff format.
-    order = SCITIFF_IMAGE_STACK_DIMENSIONS  # ("c", "t", "z", "y", "x")
-    final_sizes = {key: final_sizes[key] for key in order if key in final_sizes}
+    final_sizes = _ensure_hyperstack_sizes_default_order(da.sizes)
     dims = tuple(final_sizes.keys())
     shape = tuple(final_sizes.values())
     sizes: dict[str, int] = dict(zip(dims, shape, strict=True))
@@ -110,17 +123,15 @@ def _export_data_array(da: sc.DataArray, file_path: str | pathlib.Path) -> None:
     )
 
 
-def _export_data_group(dg: sc.DataGroup, file_path: str | pathlib.Path) -> None:
-    raise NotImplementedError("Exporting DataGroup to SCITIFF is not yet implemented.")
-
-
 def export_scitiff(
     dg: sc.DataGroup | sc.DataArray, file_path: str | pathlib.Path
 ) -> None:
     if isinstance(dg, sc.DataArray):
         _export_data_array(dg, file_path)
     else:
-        _export_data_group(dg, file_path)
+        raise NotImplementedError(
+            "Exporting DataGroup to SCITIFF is not yet implemented."
+        )
 
 
 def _is_nested_value(

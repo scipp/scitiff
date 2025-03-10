@@ -47,15 +47,15 @@
           "minItems": 5,
           "prefixItems": [
             {
-              "const": "c",
-              "type": "string"
-            },
-            {
               "const": "t",
               "type": "string"
             },
             {
               "const": "z",
+              "type": "string"
+            },
+            {
+              "const": "c",
               "type": "string"
             },
             {
@@ -94,8 +94,15 @@
           "type": "array"
         },
         "unit": {
-          "title": "Unit",
-          "type": "string"
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Unit"
         },
         "dtype": {
           "title": "Dtype",
@@ -147,19 +154,36 @@
           "type": "array"
         },
         "unit": {
-          "title": "Unit",
-          "type": "string"
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Unit"
         },
         "dtype": {
           "title": "Dtype",
           "type": "string"
         },
         "values": {
-          "items": {
-            "type": "number"
-          },
-          "title": "Values",
-          "type": "array"
+          "anyOf": [
+            {
+              "items": {
+                "type": "number"
+              },
+              "type": "array"
+            },
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            }
+          ],
+          "title": "Values"
         }
       },
       "required": [
