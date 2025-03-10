@@ -13,28 +13,27 @@ from ._resources import SCITIFF_METADATA_CONTAINER_SCHEMA
 def validate_scitiff_metadata_container(instance: dict) -> None:
     """Validate the metadata container.
 
-    *Note that this is not the scitiff-metadata-validator*
-
     It validates a dictionary that carries the metadata of a scitiff file.
-    It is because tiff or other image formats can carry other metadata as well
+    It is because tiff or other image formats can carry other metadata as well,
     therefore the container schema defines under what name the scitiff metadata
     should be stored.
 
     Example
     -------
     A tiff image stack can have metadata like:
-    ```json
-    {
-      'owner': 'Sun',
-      'date': '2025-01-01',
-      'scitiff': {
-        ...
+
+    .. code-block:: json
+
+      {
+        "owner": "Sun",
+        "date": "2025-01-01",
+        "scitiff": {...}
       }
-    }
-    ```
-    This whole dictionary validates as :class:~``SciTiffCompatibleMetadata``.
-    And the dictionary under `scitiff` key is the scitiff metadata,
-    and it validates as the :class:~``SciTiffMetadata``.
+
+
+    This whole dictionary validates as :class:`scitiff.SciTiffMetadataContainer`.
+    It implies that the dictionary under `scitiff` key is the scitiff metadata,
+    should validate as the :class:`scitiff.SciTiffMetadata`.
 
     Parameters
     ----------

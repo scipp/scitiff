@@ -16,5 +16,5 @@ from ._schema import (
     SciTiffMetadata,
     SciTiffMetadataContainer,
 )
-from .io import export_scitiff, load_scitiff
+from .io import load_scitiff, save_scitiff
 from .validator import validate_scitiff_metadata_container

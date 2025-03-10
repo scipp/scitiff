@@ -10,10 +10,6 @@
    :template: class-template.rst
    :recursive:
 
-   SciTiff
-   SciTiffMetadataContainer
-   SciTiffMetadata
-
 ```
 
 ## Top-level functions
@@ -23,9 +19,8 @@
    :toctree: ../generated/functions
    :recursive:
 
-   export_scitiff
+   save_scitiff
    load_scitiff
-   validate_scitiff
    validate_scitiff_metadata_container
 
 ```
@@ -39,5 +34,7 @@
    :recursive:
 
    io
+   validator
+   data
 
 ```
