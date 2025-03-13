@@ -106,11 +106,13 @@ def to_scitiff_image(da: sc.DataArray) -> sc.DataArray:
 
 
 def _validate_dtypes(da: sc.DataArray) -> None:
-    # Checking int8 and int16 as string because scipp currently does not have
+    # Checking int8 and int16 as well because scipp currently does not have
     # dtype of int8 and int16, but may have in the future.
-    # We will replace this to use the DType module when it is available later.
-    # So that we don't have any hard-coded values in the source code.
-    if da.dtype != sc.DType.float32 or str(da.dtype) not in ("int8", "int16"):
+    # We are checking dtype in advance to the ``tifffile.imwrite`` function
+    # raises an error, because the error message is not clear.
+    # i.e. ValueError: the ImageJ format does not support data type 'd'
+    # when the dtype is float64.
+    if str(da.dtype) not in ("int8", "int16", "float32"):
         raise sc.DTypeError(
             f"DataArray has unexpected dtype: {da.dtype}. "
             "ImageJ only supports float32, int8, and int16 dtypes. "
