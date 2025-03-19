@@ -63,3 +63,10 @@ def test_load_squeeze_false(sample_image, tmp_path) -> None:
     save_scitiff(sample_image, tmp_file_path)
     loaded_image = load_scitiff(tmp_file_path, squeeze=False)
     assert loaded_image.dims == SCITIFF_IMAGE_STACK_DIMENSIONS
+
+
+def test_save_wrong_dtype_raises(sample_image: sc.DataArray) -> None:
+    with pytest.raises(sc.DTypeError, match='DataArray has unexpected dtype: int64'):
+        save_scitiff(sample_image.astype(int), 'test.tiff')
+    with pytest.raises(sc.DTypeError, match='DataArray has unexpected dtype: float64'):
+        save_scitiff(sample_image.astype(float), 'test.tiff')

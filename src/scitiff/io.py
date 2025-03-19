@@ -105,9 +105,26 @@ def to_scitiff_image(da: sc.DataArray) -> sc.DataArray:
     return sc.broadcast(da, sizes=sizes)
 
 
+def _validate_dtypes(da: sc.DataArray) -> None:
+    # Checking int8 and int16 as well because scipp currently does not have
+    # dtype of int8 and int16, but may have in the future.
+    # We are checking dtype in advance to the ``tifffile.imwrite`` function
+    # raises an error, because the error message is not clear.
+    # i.e. ValueError: the ImageJ format does not support data type 'd'
+    # when the dtype is float64.
+    if str(da.dtype) not in ("int8", "int16", "float32"):
+        raise sc.DTypeError(
+            f"DataArray has unexpected dtype: {da.dtype}. "
+            "ImageJ only supports float32, int8, and int16 dtypes. "
+            "Use `scipp.DataArray.astype` to convert the dtype. "
+            "**Note that scipp currently does not have int8 and int16 dtypes.**"
+        )
+
+
 def _save_data_array(da: sc.DataArray, file_path: str | pathlib.Path) -> None:
     final_image = to_scitiff_image(da)
     metadata = extract_metadata(final_image)
+    _validate_dtypes(final_image)
     tf.imwrite(
         file_path,
         final_image.values,
@@ -176,6 +193,10 @@ def save_scitiff(
         If the image data has unexpected dimensions.
         The function does not understand any other names for the dimensions
         except ``x``, ``y``, ``c``, ``z``, ``t``.
+
+    scipp.DTypeError
+        If the image data has unexpected dtype.
+        ImageJ only supports float32, int8, and int16 dtypes.
 
     """
     if isinstance(dg, sc.DataArray):
