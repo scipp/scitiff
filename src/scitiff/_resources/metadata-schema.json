@@ -171,6 +171,12 @@
         "values": {
           "anyOf": [
             {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            },
+            {
               "items": {
                 "type": "number"
               },
