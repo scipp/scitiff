@@ -34,6 +34,15 @@ def test_export_and_load_scitiff(sample_image, tmp_path) -> None:
     assert sc.identical(sample_image, loaded_image)
 
 
+def test_export_and_load_scitiff_with_scalar_coord(sample_image, tmp_path) -> None:
+    sample_image.coords['Ltotal'] = sc.scalar(0.0, unit='mm')
+    tmp_file_path = tmp_path / 'test_scalar_coord.tiff'
+    save_scitiff(sample_image, tmp_file_path)
+    loaded_image = load_scitiff(tmp_file_path)
+    # exported image already has right order of dimensions
+    assert sc.identical(sample_image, loaded_image)
+
+
 @pytest.fixture
 def sample_image_2d_coordinate(sample_image: sc.DataArray) -> sc.DataArray:
     new_image = sample_image.copy()

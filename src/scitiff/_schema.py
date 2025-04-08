@@ -31,7 +31,7 @@ class ScippVariable(ScippVariableMetadata):
     Only 1D variable is allowed for metadata.
     """
 
-    values: list[float] | list[str]
+    values: float | str | list[float] | list[str]
     """The values of the variable."""
 
 
