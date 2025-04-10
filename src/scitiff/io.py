@@ -3,6 +3,8 @@
 import json
 import pathlib
 import warnings
+from enum import Enum
+from typing import TypeVar
 
 import numpy as np
 import pydantic
@@ -333,8 +335,90 @@ def _fall_back_loader(
     return sc.DataGroup(image=image_da)
 
 
+class Channel(Enum):
+    intensities = "intensities"
+    variances = "variances"
+    mask = "mask"
+
+
+def _resolve_channels(da: sc.DataArray) -> sc.DataArray:
+    if da.sizes.get('c', 0) == 0 or 'c' not in da.coords or da.coords['c'].dim != 'c':
+        raise ValueError(
+            "There is no coordinate or dimension named 'c' in the DataArray. "
+        )
+
+    all_channel_names = [name.value for name in Channel]
+    c_coord = da.coords['c']
+    if any(v not in all_channel_names for v in c_coord.values):
+        raise ValueError(
+            f"Channel coordinate has unexpected values: {c_coord.values}. "
+            f"Expected values are: {all_channel_names}. Cannot resolve channels. "
+            "Assign the channel coordinate first. "
+            "i.e. da.assign_coords(\n"
+            "c=sc.array(dims=['c'], values=['intensities', 'variances'])\n"
+            ")\n"
+            "Or if it is only intensities, use ``sc.squeeze`` instead.\n"
+        )
+    if Channel.intensities.value not in c_coord.values:
+        raise ValueError(
+            "Channel coordinate does not have 'intensities' value. "
+            "At least one channel should be 'intensities'. "
+        )
+    # We have to copy the slice in order to assign mask and variances
+    intensities = da['c', sc.scalar(Channel.intensities.value)].copy(deep=True)
+    # Check if there is variances channel and assign it
+    # to the intensities variable.
+    if Channel.variances.value in c_coord.values:
+        variances = da['c', sc.scalar(Channel.variances.value)]
+        intensities.variances = variances.data.values
+    # Check if there is mask channel and assign it
+    # to the intensities variable.
+    # There must be only one mask channel.
+    # The rest of masks should all be stored as metadata as 1d array.
+    if Channel.mask.value in c_coord.values:
+        mask = da['c', sc.scalar(Channel.mask.value)]
+        intensities.masks['scitiff-mask'] = mask.data.astype(bool)
+
+    return intensities
+
+
+T = TypeVar("T", sc.DataArray, sc.DataGroup)
+
+
+def resolve_scitiff_channels(scitiff_image: T) -> T:
+    """Slice channel dimension and recombine the DataArray.
+
+    If ``da`` is a DataGroup, it will replace the image data with the resolved
+    image data. The rest of the DataGroup will be unchanged.
+
+    Parameters
+    ----------
+    da:
+        The DataArray or DataGroup to resolve channels.
+        The DataArray should have a coordinate and dimension named 'c'
+        with values of 'intensities', 'variances', and 'mask' (see :class:`~.Channel`).
+
+    """
+    warnings.warn(
+        "This function is not yet officially supported by ``Scitiff`` schema.\n"
+        "It may change in the future.\n",
+        stacklevel=2,
+        category=FutureWarning,
+    )
+    if isinstance(scitiff_image, sc.DataGroup):
+        return sc.DataGroup(
+            image=_resolve_channels(scitiff_image['image']),
+            **{key: value for key, value in scitiff_image.items() if key != 'image'},
+        )
+    else:
+        return _resolve_channels(scitiff_image)
+
+
 def load_scitiff(
-    file_path: str | pathlib.Path, *, squeeze: bool = True
+    file_path: str | pathlib.Path,
+    *,
+    squeeze: bool = True,
+    resolve_channels: bool = False,
 ) -> sc.DataGroup:
     """Load an image in SCITIFF format to a scipp data structure.
 
@@ -346,6 +430,12 @@ def load_scitiff(
     squeeze:
         If True, the dimensions with size 1 are squeezed out.
         You can also do it manually using ``sc.DataArray.squeeze`` method.
+
+    resolve_channels:
+        If True, the channel dimension is resolved as intensities, variances and mask.
+        .. warning::
+            This function is not yet officially supported by ``Scitiff`` schema.
+            It may change in the future.
 
     Returns
     -------
@@ -378,27 +468,32 @@ def load_scitiff(
                 stacklevel=2,
                 category=ImageJMetadataNotFoundWarning,
             )
-            return _fall_back_loader(file_path, squeeze=squeeze)
-        try:
-            loaded_metadata = {
-                key: json.loads(value)
-                if _is_nested_value(SciTiffMetadataContainer.model_fields, key)
-                else value
-                for key, value in tif.imagej_metadata.items()
-            }
-            container = SciTiffMetadataContainer(**loaded_metadata)
-        except pydantic.ValidationError as e:
-            warnings.warn(
-                "Scitiff metadata is broken.\n"
-                "Loading the image with arbitrary dimensions...\n"
-                f"{e}",
-                stacklevel=2,
-                category=ScitiffMetadataWarning,
-            )
-            return _fall_back_loader(file_path, squeeze=squeeze)
+            img = _fall_back_loader(file_path, squeeze=squeeze)
         else:
-            image_da = _read_image_as_dataarray(container.scitiffmeta.image, file_path)
-            if squeeze:
-                image_da = image_da.squeeze()
+            try:
+                loaded_metadata = {
+                    key: json.loads(value)
+                    if _is_nested_value(SciTiffMetadataContainer.model_fields, key)
+                    else value
+                    for key, value in tif.imagej_metadata.items()
+                }
+                container = SciTiffMetadataContainer(**loaded_metadata)
+            except pydantic.ValidationError as e:
+                warnings.warn(
+                    "Scitiff metadata is broken.\n"
+                    "Loading the image with arbitrary dimensions...\n"
+                    f"{e}",
+                    stacklevel=2,
+                    category=ScitiffMetadataWarning,
+                )
+                img = _fall_back_loader(file_path, squeeze=squeeze)
+            else:
+                image_da = _read_image_as_dataarray(
+                    container.scitiffmeta.image, file_path
+                )
+                if squeeze:
+                    image_da = image_da.squeeze()
 
-            return sc.DataGroup(image=image_da)
+                img = sc.DataGroup(image=image_da)
+
+    return img if not resolve_channels else resolve_scitiff_channels(img)
