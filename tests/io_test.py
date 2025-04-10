@@ -1,10 +1,21 @@
 # SPDX-License-Identifier: BSD-3-Clause
 # Copyright (c) 2025 Ess-dmsc-dram contributors (https://github.com/ess-dmsc-dram)
+import json
+import pathlib
+
 import pytest
 import scipp as sc
+import tifffile as tf
 
 from scitiff import SCITIFF_IMAGE_STACK_DIMENSIONS
-from scitiff.io import load_scitiff, save_scitiff
+from scitiff.io import (
+    IncompatibleDtypeWarning,
+    UnmatchedMetadataWarning,
+    extract_metadata,
+    load_scitiff,
+    save_scitiff,
+    to_scitiff_image,
+)
 
 
 @pytest.fixture
@@ -79,3 +90,63 @@ def test_save_wrong_dtype_raises(sample_image: sc.DataArray) -> None:
         save_scitiff(sample_image.astype(int), 'test.tiff')
     with pytest.raises(sc.DTypeError, match='DataArray has unexpected dtype: float64'):
         save_scitiff(sample_image.astype(float), 'test.tiff')
+
+
+def _save_data_array_with_wrong_dtype(
+    da: sc.DataArray, file_path: str | pathlib.Path
+) -> None:
+    final_image = to_scitiff_image(da)
+    metadata = extract_metadata(final_image)
+    tf.imwrite(
+        file_path,
+        final_image.values.astype('uint8'),
+        imagej=True,
+        metadata={
+            key: json.dumps(value)
+            for key, value in metadata.model_dump(mode="json").items()
+        },
+        dtype='uint8',
+    )
+
+
+def test_load_incompatible_dtype_warns(sample_image: sc.DataArray, tmp_path) -> None:
+    tmp_file_path = tmp_path / 'wrong_dtype.tiff'
+    _save_data_array_with_wrong_dtype(sample_image, tmp_file_path)
+    with pytest.warns(
+        IncompatibleDtypeWarning,
+        match="dtype of ``uint8``. The dtype will be converted to ``float32``",
+    ):
+        loaded_image = load_scitiff(tmp_file_path)['image']
+        assert loaded_image.dims == tuple(
+            f"dim_{i}" for i in range(3)
+        )  # Image is squeezed
+
+
+def _save_data_array_with_unmatching_shape(
+    da: sc.DataArray, file_path: str | pathlib.Path
+) -> None:
+    final_image = to_scitiff_image(da)
+    metadata = extract_metadata(final_image)
+    tf.imwrite(
+        file_path,
+        final_image['t', 0].values,
+        imagej=True,
+        metadata={
+            key: json.dumps(value)
+            for key, value in metadata.model_dump(mode="json").items()
+        },
+        dtype=str(final_image.dtype),
+    )
+
+
+def test_load_incompatible_metadata_warns(sample_image: sc.DataArray, tmp_path) -> None:
+    tmp_file_path = tmp_path / 'unmatching_size.tiff'
+    _save_data_array_with_unmatching_shape(sample_image, tmp_file_path)
+    with pytest.warns(
+        UnmatchedMetadataWarning,
+        match="Size of the image data does not match with the metadata.",
+    ):
+        loaded_image = load_scitiff(tmp_file_path)['image']
+        assert loaded_image.dims == tuple(
+            f"dim_{i}" for i in range(2)
+        )  # Image is squeezed

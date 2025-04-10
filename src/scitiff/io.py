@@ -2,7 +2,9 @@
 # Copyright (c) 2025 Ess-dmsc-dram contributors (https://github.com/ess-dmsc-dram)
 import json
 import pathlib
+import warnings
 
+import numpy as np
 import pydantic
 import scipp as sc
 import tifffile as tf
@@ -16,6 +18,14 @@ from ._schema import (
     SciTiffMetadata,
     SciTiffMetadataContainer,
 )
+
+
+class IncompatibleDtypeWarning(Warning):
+    """Warning for incompatible dtype."""
+
+
+class UnmatchedMetadataWarning(Warning):
+    """Warning for unmatched metadata."""
 
 
 def _wrap_unit(unit: str | None) -> str | None:
@@ -117,7 +127,7 @@ def _validate_dtypes(da: sc.DataArray) -> None:
             f"DataArray has unexpected dtype: {da.dtype}. "
             "ImageJ only supports float32, int8, and int16 dtypes. "
             "Use `scipp.DataArray.astype` to convert the dtype. "
-            "**Note that scipp currently does not have int8 and int16 dtypes.**"
+            "**Note that scipp currently does not support int8 and int16 dtypes.**"
         )
 
 
@@ -215,16 +225,73 @@ def _is_nested_value(
     )
 
 
+def _wrap_as_arbitrary_variable(image_values: np.ndarray) -> sc.Variable:
+    arbitrary_dims = [f"dim_{i}" for i in range(image_values.ndim)]
+    try:
+        return sc.array(dims=arbitrary_dims, values=image_values)
+    except RuntimeError:
+        warnings.warn(
+            "The image data does not have compatible dtype. "
+            f"The image has dtype of ``{image_values.dtype}``. "
+            "The dtype will be converted to ``float32``.",
+            stacklevel=2,
+            category=IncompatibleDtypeWarning,
+        )
+        return sc.array(dims=arbitrary_dims, values=image_values.astype(np.float32))
+
+
+def _find_real_shape(
+    meta_shape: tuple[int, ...], image_shape: tuple[int, ...]
+) -> tuple[int, ...] | None:
+    # We need to find the real shape of the image data
+    # because tifffile sometimes adds one extra dimension
+    # when loading the image into numpy array.
+    if (len(meta_shape) + 1) == len(image_shape):
+        if meta_shape == image_shape[1:]:
+            # The first dimension is the extra dimension
+            return image_shape[1:]
+        elif meta_shape == image_shape[:-1]:
+            # The last dimension is the extra dimension
+            return image_shape[:-1]
+        else:
+            return image_shape
+    if len(meta_shape) == len(image_shape):
+        return image_shape
+    else:
+        return image_shape
+
+
 def _read_image_as_dataarray(
     image_metadata: ImageDataArrayMetadata, file_path: str | pathlib.Path
 ) -> sc.DataArray:
-    image = sc.zeros(
-        dims=[*image_metadata.data.dims],
-        shape=[*image_metadata.data.shape],
-        unit=image_metadata.data.unit,
-        dtype=image_metadata.data.dtype,
-    )
-    tf.imread(file_path, squeeze=False, out=image.values)
+    try:
+        image = sc.zeros(
+            dims=[*image_metadata.data.dims],
+            shape=[*image_metadata.data.shape],
+            unit=image_metadata.data.unit,
+            dtype=image_metadata.data.dtype,
+        )
+        tf.imread(file_path, squeeze=False, out=image.values)
+    except ValueError:
+        image_values = tf.imread(file_path, squeeze=False)
+        real_shape = _find_real_shape(image_metadata.data.shape, image_values.shape)
+        if image_metadata.data.shape != real_shape:
+            # tifffile has one extra dimension for some reason.
+            warnings.warn(
+                "Size of the image data does not match with the metadata.\n"
+                f"Metadata: \n{image_metadata.data.shape}\n"
+                f"Actual image data: \n{image_values.shape[1:]}\n"
+                "Discarding all metadata and "
+                "loading the squeezed image with arbitrary dimension names...\n",
+                stacklevel=2,
+                category=UnmatchedMetadataWarning,
+            )
+        else:
+            ...
+            # Size mismatches due to dtype mismatch
+            # It is handled by the ``_wrap_as_arbitrary_variable`` function
+        return sc.DataArray(data=_wrap_as_arbitrary_variable(image_values.squeeze()))
+
     # We are loading image directly to the allocated array.
     # In this way we save memory and time.
     # Also, ``tifffile.imread`` adds one extra dimension
@@ -269,6 +336,13 @@ def load_scitiff(
         as the :class:`scitiff.SciTiffMetadataContainer` except
         the image data has values loaded from the tiff file
         not just the metadata.
+
+    Warnings
+    --------
+    - :class:`IncompatibleDtypeWarning`: If the image data has incompatible dtype.
+    - :class:`UnmatchedMetadataWarning`: If the image data has incompatible size
+      with the metadata.
+      The metadata is discarded and the image is loaded with arbitrary dimensions.
 
     """
     with tf.TiffFile(file_path) as tif:
