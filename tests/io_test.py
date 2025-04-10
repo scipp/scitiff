@@ -9,7 +9,9 @@ import tifffile as tf
 
 from scitiff import SCITIFF_IMAGE_STACK_DIMENSIONS
 from scitiff.io import (
+    ImageJMetadataNotFoundWarning,
     IncompatibleDtypeWarning,
+    ScitiffMetadataWarning,
     UnmatchedMetadataWarning,
     extract_metadata,
     load_scitiff,
@@ -150,3 +152,30 @@ def test_load_incompatible_metadata_warns(sample_image: sc.DataArray, tmp_path) 
         assert loaded_image.dims == tuple(
             f"dim_{i}" for i in range(2)
         )  # Image is squeezed
+
+
+def test_load_without_metadata_warns(tmp_path) -> None:
+    import numpy as np
+
+    no_metadata_file_path = tmp_path / 'no_metadata.tiff'
+    tf.imwrite(no_metadata_file_path, [[1.0, 2], [3, 4]])
+    with pytest.warns(
+        ImageJMetadataNotFoundWarning, match='ImageJ metadata not found.'
+    ):
+        loaded_image: sc.DataArray = load_scitiff(no_metadata_file_path)['image']
+        assert loaded_image.dims == tuple(f"dim_{i}" for i in range(2))
+        assert np.all(loaded_image.values == np.array([[1.0, 2], [3, 4]]))
+
+
+def test_load_broken_metadata_warns(tmp_path) -> None:
+    import numpy as np
+
+    no_metadata_file_path = tmp_path / 'broken_metadata.tiff'
+    arbitrary_image = np.array([[1.0, 2], [3, 4]], dtype='float32')
+    tf.imwrite(
+        no_metadata_file_path, arbitrary_image, imagej=True, metadata={"meh": "meh"}
+    )
+    with pytest.warns(ScitiffMetadataWarning, match='Scitiff metadata is broken.'):
+        loaded_image: sc.DataArray = load_scitiff(no_metadata_file_path)['image']
+        assert loaded_image.dims == tuple(f"dim_{i}" for i in range(2))
+        assert np.all(loaded_image.values == arbitrary_image)
