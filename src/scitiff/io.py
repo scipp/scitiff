@@ -28,6 +28,14 @@ class UnmatchedMetadataWarning(Warning):
     """Warning for unmatched metadata."""
 
 
+class ImageJMetadataNotFoundWarning(Warning):
+    """Warning for missing ImageJ metadata."""
+
+
+class ScitiffMetadataWarning(Warning):
+    """Warning for broken scitiff metadata."""
+
+
 def _wrap_unit(unit: str | None) -> str | None:
     # str(None), which is `None` is interpreted as `N` (neuton) when
     # it is loaded back from the json file.
@@ -314,6 +322,17 @@ def _read_image_as_dataarray(
     )
 
 
+def _fall_back_loader(
+    file_path: str | pathlib.Path, *, squeeze: bool = True
+) -> sc.DataGroup:
+    # This is a fall back loader for the image data
+    # when the metadata is not found in the tiff file or it is broken.
+    # The metadata is discarded and the image is loaded with arbitrary dimensions.
+    image_values = tf.imread(file_path, squeeze=squeeze)
+    image_da = sc.DataArray(data=_wrap_as_arbitrary_variable(image_values))
+    return sc.DataGroup(image=image_da)
+
+
 def load_scitiff(
     file_path: str | pathlib.Path, *, squeeze: bool = True
 ) -> sc.DataGroup:
@@ -337,6 +356,12 @@ def load_scitiff(
         the image data has values loaded from the tiff file
         not just the metadata.
 
+        .. note::
+            If the metadata is not found in the tiff file or it is broken,
+            the image is loaded with arbitrary dimensions
+            and the metadata is discarded.
+            The returned data group will have the same structure.
+
     Warnings
     --------
     - :class:`IncompatibleDtypeWarning`: If the image data has incompatible dtype.
@@ -347,19 +372,33 @@ def load_scitiff(
     """
     with tf.TiffFile(file_path) as tif:
         if tif.imagej_metadata is None:
-            raise ValueError(
-                f"ImageJ metadata is not found in the tiff file: {file_path}"
+            warnings.warn(
+                "ImageJ metadata not found in the tiff file.\n"
+                "Loading the image with arbitrary dimensions...\n",
+                stacklevel=2,
+                category=ImageJMetadataNotFoundWarning,
             )
-        loaded_metadata = {
-            key: json.loads(value)
-            if _is_nested_value(SciTiffMetadataContainer.model_fields, key)
-            else value
-            for key, value in tif.imagej_metadata.items()
-        }
-        container = SciTiffMetadataContainer(**loaded_metadata)
+            return _fall_back_loader(file_path, squeeze=squeeze)
+        try:
+            loaded_metadata = {
+                key: json.loads(value)
+                if _is_nested_value(SciTiffMetadataContainer.model_fields, key)
+                else value
+                for key, value in tif.imagej_metadata.items()
+            }
+            container = SciTiffMetadataContainer(**loaded_metadata)
+        except pydantic.ValidationError as e:
+            warnings.warn(
+                "Scitiff metadata is broken.\n"
+                "Loading the image with arbitrary dimensions...\n"
+                f"{e}",
+                stacklevel=2,
+                category=ScitiffMetadataWarning,
+            )
+            return _fall_back_loader(file_path, squeeze=squeeze)
+        else:
+            image_da = _read_image_as_dataarray(container.scitiffmeta.image, file_path)
+            if squeeze:
+                image_da = image_da.squeeze()
 
-    image_da = _read_image_as_dataarray(container.scitiffmeta.image, file_path)
-    if squeeze:
-        image_da = image_da.squeeze()
-
-    return sc.DataGroup(image=image_da)
+            return sc.DataGroup(image=image_da)
