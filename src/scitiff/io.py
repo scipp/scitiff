@@ -762,7 +762,10 @@ def resolve_scitiff_channels(scitiff_image: T) -> T:
 
 
 def load_scitiff(
-    file_path: str | pathlib.Path, *, squeeze: bool = True
+    file_path: str | pathlib.Path,
+    *,
+    squeeze: bool = True,
+    resolve_channels: bool = False,
 ) -> sc.DataGroup:
     """Load an image in SCITIFF format to a scipp data structure.
 
@@ -815,27 +818,32 @@ def load_scitiff(
                 stacklevel=2,
                 category=ImageJMetadataNotFoundWarning,
             )
-            return _fall_back_loader(file_path, squeeze=squeeze)
-        try:
-            loaded_metadata = {
-                key: json.loads(value)
-                if _is_nested_value(SciTiffMetadataContainer.model_fields, key)
-                else value
-                for key, value in tif.imagej_metadata.items()
-            }
-            container = SciTiffMetadataContainer(**loaded_metadata)
-        except pydantic.ValidationError as e:
-            warnings.warn(
-                "Scitiff metadata is broken.\n"
-                "Loading the image with arbitrary dimensions...\n"
-                f"{e}",
-                stacklevel=2,
-                category=ScitiffMetadataWarning,
-            )
-            return _fall_back_loader(file_path, squeeze=squeeze)
+            img = _fall_back_loader(file_path, squeeze=squeeze)
         else:
-            image_da = _read_image_as_dataarray(container.scitiffmeta.image, file_path)
-            if squeeze:
-                image_da = image_da.squeeze()
+            try:
+                loaded_metadata = {
+                    key: json.loads(value)
+                    if _is_nested_value(SciTiffMetadataContainer.model_fields, key)
+                    else value
+                    for key, value in tif.imagej_metadata.items()
+                }
+                container = SciTiffMetadataContainer(**loaded_metadata)
+            except pydantic.ValidationError as e:
+                warnings.warn(
+                    "Scitiff metadata is broken.\n"
+                    "Loading the image with arbitrary dimensions...\n"
+                    f"{e}",
+                    stacklevel=2,
+                    category=ScitiffMetadataWarning,
+                )
+                img = _fall_back_loader(file_path, squeeze=squeeze)
+            else:
+                image_da = _read_image_as_dataarray(
+                    container.scitiffmeta.image, file_path
+                )
+                if squeeze:
+                    image_da = image_da.squeeze()
 
-            return sc.DataGroup(image=image_da)
+                img = sc.DataGroup(image=image_da)
+
+    return img if not resolve_channels else resolve_scitiff_channels(img)
