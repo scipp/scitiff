@@ -5,24 +5,7 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
-TIME_DIMENSION_AND_COORDINATE_NAME = "t"
-"""The name of the time dimension and coordinate."""
-ZAXIS_DIMENSION_AND_COORDINATE_NAME = "z"
-"""The name of the z-axis dimension and coordinate."""
-CHANNEL_DIMENSION_AND_COORDINATE_NAME = "c"
-"""The name of the channel dimension and coordinate."""
-YAXIS_DIMENSION_AND_COORDINATE_NAME = "y"
-"""The name of the y-axis dimension and coordinate."""
-XAXIS_DIMENSION_AND_COORDINATE_NAME = "x"
-"""The name of the x-axis dimension and coordinate."""
-
-SCITIFF_IMAGE_STACK_DIMENSIONS = (
-    TIME_DIMENSION_AND_COORDINATE_NAME,  # t
-    ZAXIS_DIMENSION_AND_COORDINATE_NAME,  # z
-    CHANNEL_DIMENSION_AND_COORDINATE_NAME,  # c
-    YAXIS_DIMENSION_AND_COORDINATE_NAME,  # y
-    XAXIS_DIMENSION_AND_COORDINATE_NAME,  # x
-)
+SCITIFF_IMAGE_STACK_DIMENSIONS = ("t", "z", "c", "y", "x")
 """The order of the dimensions in the image stack.
 
 The order is from the outermost dimension to the innermost dimension.
