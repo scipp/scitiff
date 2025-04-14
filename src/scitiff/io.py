@@ -3,8 +3,6 @@
 import json
 import pathlib
 import warnings
-from enum import Enum
-from typing import TypeVar
 
 import numpy as np
 import pydantic
@@ -12,7 +10,6 @@ import scipp as sc
 import tifffile as tf
 from scipp.compat.dict import from_dict
 
-from ._schema import CHANNEL_DIMENSION_AND_COORDINATE_NAME as CHANNEL_DIM
 from ._schema import (
     SCITIFF_IMAGE_STACK_DIMENSIONS,
     ImageDataArrayMetadata,
@@ -21,10 +18,6 @@ from ._schema import (
     SciTiffMetadata,
     SciTiffMetadataContainer,
 )
-from ._schema import TIME_DIMENSION_AND_COORDINATE_NAME as TIME_DIM
-from ._schema import XAXIS_DIMENSION_AND_COORDINATE_NAME as X_DIM
-from ._schema import YAXIS_DIMENSION_AND_COORDINATE_NAME as Y_DIM
-from ._schema import ZAXIS_DIMENSION_AND_COORDINATE_NAME as Z_DIM
 
 
 class IncompatibleDtypeWarning(Warning):
@@ -113,354 +106,13 @@ def _validate_dimensions(da: sc.DataArray) -> None:
 def _ensure_hyperstack_sizes_default_order(sizes: dict) -> dict:
     # Order of the dimensions is according to the HyperStacks tiff format.
     order = SCITIFF_IMAGE_STACK_DIMENSIONS
-    default_sizes = {X_DIM: 1, Y_DIM: 1, Z_DIM: 1, TIME_DIM: 1, CHANNEL_DIM: 1}
+    default_sizes = {"x": 1, "y": 1, "z": 1, "t": 1, "c": 1}
     final_sizes = {**default_sizes, **sizes}
     return {key: final_sizes[key] for key in order if key in final_sizes}
 
 
-def _warn_about_multi_channel_images() -> None:
-    warnings.warn(
-        "Multi-channel images interpreted as `intensities`, `stdevs` and `mask` "
-        "is not yet officially supported by ``Scitiff`` schema.\n"
-        "**Please do not use this function for production.**\n"
-        "**It may change in the future.**\n",
-        stacklevel=2,
-        category=FutureWarning,
-    )
-
-
-def _retrieve_mask_and_wrap_as_dataarray(
-    da: sc.DataArray, mask_name: str | None = None
-) -> sc.DataArray | None:
-    """Find the matching mask and pop it out from the DataArray."""
-    mask = None
-    if mask_name is not None:
-        mask = da.masks.pop(mask_name, None)
-        if mask is not None and (mask.sizes != da.sizes):
-            raise ValueError(
-                f"Mask ``{mask_name}`` has unexpected size: {mask.sizes}. "
-                f"Expected size is: {da.sizes}. "
-                "Use `scipp.broadcast` to match the image size."
-                "Or if the mask is 1D, it will be saved as metadata "
-                "so you do not have to concatenate it as a separate channel."
-            )
-
-    elif len(da.masks) == 1 and (next(iter(da.masks.values()))).sizes == da.sizes:
-        mask_name, mask = da.masks.popitem()
-    else:  # Try to find the mask with the same size as the DataArray
-        # If there is only one mask with the same size as the DataArray
-        # pop it out from the DataArray and wrap it as DataArray
-        matchine_masks = {
-            mask_name: mask
-            for mask_name, mask in da.masks.items()
-            if mask.sizes == da.sizes
-        }
-        if len(matchine_masks) == 1:
-            mask_name, mask = matchine_masks.popitem()
-            da.masks.pop(mask_name)
-
-    if mask is not None and mask_name is not None:
-        mask_channel = da.copy(deep=False)
-        mask_channel.data = mask.to(unit=da.unit, dtype=da.dtype)
-        mask_channel.name = mask_name
-        # Assign channel coordinate
-        mask_channel.coords[CHANNEL_DIM] = sc.scalar(value=Channel.mask.value)
-        return mask_channel
-    else:
-        # If mask is not found, return None
-        return None
-
-
-def _retrieve_stdevs_and_wrap_as_dataarray(da: sc.DataArray) -> sc.DataArray | None:
-    """Find the matching mask and pop it out from the DataArray."""
-    if da.variances is not None:
-        stdevs = sc.stddevs(da)
-        # Assign channel coordinate
-        stdevs.coords[CHANNEL_DIM] = sc.scalar(value=Channel.stdevs.value)
-        return stdevs
-    else:
-        # If variances are not found, return None
-        return None
-
-
-def _concat_intensities_stdevs_and_mask(
-    da: sc.DataArray,
-    mask_channel: sc.DataArray | None,
-    stdevs_channel: sc.DataArray | None,
-) -> sc.DataArray:
-    """Concatenate the intensities, stdevs and mask to a single DataArray."""
-    if mask_channel is None and stdevs_channel is None:
-        # Make sure ``da`` and ``c`` coordinate has consistent dimensions
-        # as returned values of other cases.
-        da = sc.concat([da], dim=CHANNEL_DIM)
-        da.coords['c'] = sc.concat([da.coords['c']], dim=CHANNEL_DIM)
-        return da
-
-    intensities = sc.values(da)
-    concatenated_channels = [intensities, stdevs_channel, mask_channel]
-    return sc.concat(
-        [c_da for c_da in concatenated_channels if c_da is not None],
-        dim=CHANNEL_DIM,
-    )
-
-
-def _validate_da_and_squeeze_channel(da: sc.DataArray) -> sc.DataArray:
-    """Validate the DataArray and squeeze the channel dimension.
-
-    It will also check if the ``c`` coordinate has expected value.
-
-    Returns
-    -------
-    :
-        The DataArray with the channel dimension squeezed.
-        If ``c`` channel is not present, it will simply return
-        shallow copy of the DataArray.
-
-
-    """
-    # Check if ``da`` has ``c`` dimension already.
-    if (orig_c_size := da.sizes.get(CHANNEL_DIM, 0)) > 1:
-        raise NotImplementedError(
-            f"DataArray already has c dimension with size {orig_c_size}. "
-            "Multiple channel-intensities are not supported yet. "
-            "It is because scitiff is mainly for high energy imaging that "
-            "does not have multiple channels like optical images. "
-        )
-    elif orig_c_size == 1:
-        da = da.squeeze(CHANNEL_DIM)
-    else:
-        da = da.copy(deep=False)
-
-    # Check if ``da`` has ``c`` coordinate already, it should be a scalar.
-    match c_coord := da.coords.get(CHANNEL_DIM):
-        case sc.Variable(value=Channel.intensities.value) | None:
-            ...
-        case _:
-            raise ValueError(
-                f"DataArray has unexpected ``c`` coordinate: {c_coord}. "
-                "The ``c`` coordinate should not exist or "
-                "should be a single element array in ``c`` dimension "
-                "with the value of `intensities` as a string. "
-            )
-
-    # Assign the channel coordinate to the DataArray
-    da.coords[CHANNEL_DIM] = sc.scalar(value=Channel.intensities.value)
-    return da
-
-
-def concat_stdevs_as_channels(da: sc.DataArray) -> sc.DataArray:
-    """Concatenate intensities and stdevs into channel dimension.
-
-    Parameters
-    ----------
-    da:
-        The DataArray to retrieve stdevs.
-        If ``variances`` property of DataArray is ``None``, it will raise an error.
-
-    Returns
-    -------
-    :
-        The DataArray with the stdevs concatenated in channel dimension.
-        The intensities will lose ``variances``.
-        as it is concatenated as a separate channel.
-
-    Raises
-    ------
-    ValueError
-        If the DataArray does not have ``variances``.
-
-
-    .. tip::
-        Use `scipp.DataArray.variances` to assign variances.
-
-
-    .. tip::
-        Use :func:`concat_stdevs_and_mask_as_channels`
-        to concatenate only when ``variances`` are present.
-
-
-    """
-    if da.variances is None:
-        raise ValueError(
-            "DataArray does not have ``variances``. "
-            "Use `scipp.DataArray.variances` to assign variances."
-            "Otherwise, use ``concat_stdevs_and_mask_as_channels`` "
-            "to concatenate **only** when ``variances`` are present."
-        )
-
-    _warn_about_multi_channel_images()
-    da = _validate_da_and_squeeze_channel(da)
-    stdevs = _retrieve_stdevs_and_wrap_as_dataarray(da)
-    return _concat_intensities_stdevs_and_mask(
-        da, mask_channel=None, stdevs_channel=stdevs
-    )
-
-
-def concat_mask_as_channels(da: sc.DataArray, mask_name: str | None) -> sc.DataArray:
-    """Concatenate intensities and a mask into channel dimension.
-
-    Parameters
-    ----------
-    da:
-        The DataArray to retrieve a mask.
-        If the mask cannot be determined, it will raise an error.
-
-    mask_name:
-        The name of the mask to be concatenated as a separate channel.
-        If ``None``, it will try to find a single mask
-        with the same size as the ``da``.
-        If there are multiple masks with the same size, it will raise.
-
-    Returns
-    -------
-    :
-        The DataArray with the mask concatenated in channel dimension.
-        The intensities will lose the matching mask
-        as they are concatenated as channels.
-        It will have `c` coordinate with the size of corresponding channels.
-
-    Raises
-    ------
-    ValueError
-        If the DataArray has ``variances``.
-
-
-    .. tip::
-        Use :func:`scipp.values` to drop ``variances``
-
-
-    .. tip::
-        Use :func:`concat_stdevs_and_mask_as_channels`
-        to concatenate both stdevs and a mask.
-
-
-    """
-    if da.variances is not None:
-        raise ValueError(
-            "DataArray has ``variances``. "
-            "Use `scipp.values` to drop ``variances``."
-            "Otherwise, use ``concat_stdevs_and_mask_as_channels`` "
-            "to concatenate both ``stdevs`` and ``mask``."
-        )
-
-    da = _validate_da_and_squeeze_channel(da)
-    mask_channel = _retrieve_mask_and_wrap_as_dataarray(da, mask_name)
-
-    if mask_channel is None:
-        raise ValueError(
-            "A mask to be concatenated cannot be determined. "
-            "Use ``scipp.DataArray.assign_masks`` to assign a mask. "
-        )
-
-    _warn_about_multi_channel_images()
-    return _concat_intensities_stdevs_and_mask(
-        da, mask_channel=mask_channel, stdevs_channel=None
-    )
-
-
-def concat_stdevs_and_mask_as_channels(
-    da: sc.DataArray, mask_name: str | None = None
-) -> sc.DataArray:
-    """Concatenate intensities, stdevs and a mask into channel dimension.
-
-    Parameters
-    ----------
-    da:
-        The DataArray to retrieve stdevs and a mask.
-        If stdevs or a mask does not exist, it will be ignored.
-
-    mask_name:
-        The name of the mask to repack as a separate channel.
-        If ``None``, it will try to find a single mask
-        with the same size as the ``da``.
-        If there are multiple masks with the same size, masks will be ignored.
-
-
-    Returns
-    -------
-    :
-        The DataArray with the ``stdevs`` and a ``mask`` concatenated as channels.
-        The intensities will lose ``variances`` and a matching mask
-        as they are repacked and concatenated as channels.
-        It will have ``c`` coordinate with the size of corresponding channels.
-
-
-    .. tip::
-        If there are multiple masks with multi-dimensions, it cannot be saved
-        in the :class:`SciTiffMetadata`
-        so you will have to either make them as multiple
-        1D masks or remove them before saving the image.
-
-    """
-    _warn_about_multi_channel_images()
-    da = _validate_da_and_squeeze_channel(da)
-
-    # Retrieving mask first to get rid of the mask from the DataArray
-    # before concatenating the channels.
-    mask_channel = _retrieve_mask_and_wrap_as_dataarray(da, mask_name)
-    stdevs = _retrieve_stdevs_and_wrap_as_dataarray(da)
-    # Concatenate all one-three channels
-    return _concat_intensities_stdevs_and_mask(
-        da, mask_channel=mask_channel, stdevs_channel=stdevs
-    )
-
-
-def to_scitiff_image(
-    da: sc.DataArray,
-    concat_stdevs_and_mask: bool = False,
-    mask_name: str | None = None,
-) -> sc.DataArray:
-    """Modify dimnesions and shapes to match the scitiff image schema.
-
-    The function will modify the dimensions and shapes of the DataArray.
-    It also changes the order of the dimensions to match the HyperStack order.
-    See :class:`SciTiffMetadata`.
-
-    Parameters
-    ----------
-    da:
-        The DataArray to modify as scitiff image.
-
-    concat_stdevs_and_mask:
-        If True, the function will concatenate
-        ``stdevs`` and a ``mask`` to separate channels.
-        The default is False.
-
-    mask_name:
-        It will be ignored if the ``concat_stdevs_and_mask`` is ``False``.
-        The name of the mask to be concatenated as a separate channel.
-        If ``None``, it will try to find a single mask
-        with the same size as the ``da``.
-        If there are multiple masks with the same size, masks will be ignored.
-
-
-    .. tip::
-        You can explicitly concatenate the channels
-        by using :func:`concat_stdevs_and_mask_as_channels` function.
-        For example,
-        if you do not want to save ``stdevs`` and ``mask`` for raw images
-        but want to save them for normalized images,
-        you can use :func:`concat_stdevs_and_mask_as_channels`
-        function only for normalized images.
-
-
-    .. warning::
-        Interpretation of multi-channel images as
-        ``intensities``, ``stdevs`` and ``mask``
-        is not officially supported by the scitiff schema.
-
-        It may change in the future.
-
-
-    .. tip::
-        If there are multiple masks with multi-dimensions, it cannot be saved
-        in the scitiff format so you will have to either make them as multiple
-        1D masks or remove them before saving the image.
-
-    """
+def to_scitiff_image(da: sc.DataArray) -> sc.DataArray:
     _validate_dimensions(da)
-    if concat_stdevs_and_mask:
-        da = concat_stdevs_and_mask_as_channels(da, mask_name)
     final_sizes = _ensure_hyperstack_sizes_default_order(da.sizes)
     dims = tuple(final_sizes.keys())
     shape = tuple(final_sizes.values())
@@ -517,7 +169,6 @@ def save_scitiff(
     (From the innermost dimension to the outermost dimension)
 
     .. note::
-
         Before the image is saved, it is broadcasted to match the HyperStack
         even if part of dimensions are not present.
         For example, if the image has only ``x`` and ``y`` dimensions,
@@ -542,6 +193,7 @@ def save_scitiff(
                      "t",    "time-axis(time-of-flight or other time-like dimension)"
 
         .. warning::
+
             For neutron imaging, ``c`` dimension may not represent color channels.
 
 
@@ -681,91 +333,8 @@ def _fall_back_loader(
     return sc.DataGroup(image=image_da)
 
 
-class Channel(Enum):
-    intensities = "intensities"
-    stdevs = "stedvs"
-    mask = "mask"
-
-
-def _resolve_channels(da: sc.DataArray) -> sc.DataArray:
-    if (
-        da.sizes.get(CHANNEL_DIM, 0) == 0
-        or CHANNEL_DIM not in da.coords
-        or da.coords[CHANNEL_DIM].dim != CHANNEL_DIM
-    ):
-        raise ValueError(
-            "There is no coordinate or dimension named 'c' in the DataArray. "
-        )
-
-    all_channel_names = [name.value for name in Channel]
-    c_coord = da.coords[CHANNEL_DIM]
-    if any(v not in all_channel_names for v in c_coord.values):
-        raise ValueError(
-            f"Channel coordinate has unexpected values: {c_coord.values}. "
-            f"Expected values are: {all_channel_names}. Cannot resolve channels. "
-            "Assign the channel coordinate first. "
-            "i.e. da.assign_coords(\n"
-            "c=sc.array(dims=['c'], values=['intensities', 'stdevs'])\n"
-            ")\n"
-            "Or if it is only intensities, use ``sc.squeeze`` instead.\n"
-        )
-    if Channel.intensities.value not in c_coord.values:
-        raise ValueError(
-            "Channel coordinate does not have 'intensities' value. "
-            "At least one channel should be 'intensities'. "
-        )
-    # We have to copy the slice in order to assign mask and stdevs
-    intensities = da[CHANNEL_DIM, sc.scalar(Channel.intensities.value)].copy(deep=True)
-    # Check if there is stdevs channel and assign it
-    # to the intensities variable.
-    if Channel.stdevs.value in c_coord.values:
-        stdevs = da[CHANNEL_DIM, sc.scalar(Channel.stdevs.value)]
-        # Add stdevs as variances to the intensities variable
-        intensities.variances = (stdevs.data**2).values
-
-    # Check if there is mask channel and assign it
-    # to the intensities variable.
-    # There must be only one mask channel.
-    # The rest of masks should all be stored as metadata as 1d array.
-    if Channel.mask.value in c_coord.values:
-        mask = da[CHANNEL_DIM, sc.scalar(Channel.mask.value)]
-        intensities.masks['scitiff-mask'] = mask.data.astype(bool)
-
-    return intensities
-
-
-T = TypeVar("T", sc.DataArray, sc.DataGroup)
-
-
-def resolve_scitiff_channels(scitiff_image: T) -> T:
-    """Slice channel dimension and recombine the DataArray.
-
-    If ``da`` is a DataGroup, it will replace the image data with the resolved
-    image data. The rest of the DataGroup will be unchanged.
-
-    Parameters
-    ----------
-    da:
-        The DataArray or DataGroup to resolve channels.
-        The DataArray should have a coordinate and dimension named 'c'
-        with values of 'intensities', 'stdevs', and 'mask' (see :class:`~.Channel`).
-
-    """
-    _warn_about_multi_channel_images()
-    if isinstance(scitiff_image, sc.DataGroup):
-        return sc.DataGroup(
-            image=_resolve_channels(scitiff_image['image']),
-            **{key: value for key, value in scitiff_image.items() if key != 'image'},
-        )
-    else:
-        return _resolve_channels(scitiff_image)
-
-
 def load_scitiff(
-    file_path: str | pathlib.Path,
-    *,
-    squeeze: bool = True,
-    resolve_channels: bool = False,
+    file_path: str | pathlib.Path, *, squeeze: bool = True
 ) -> sc.DataGroup:
     """Load an image in SCITIFF format to a scipp data structure.
 
@@ -777,13 +346,6 @@ def load_scitiff(
     squeeze:
         If True, the dimensions with size 1 are squeezed out.
         You can also do it manually using ``sc.DataArray.squeeze`` method.
-
-    resolve_channels:
-        If True, the channel dimension is resolved as intensities, stdevs and mask.
-
-        .. warning::
-            This function is not yet officially supported by ``Scitiff`` schema.
-            It may change in the future.
 
     Returns
     -------
@@ -802,12 +364,10 @@ def load_scitiff(
 
     Warnings
     --------
-    :class:`~.IncompatibleDtypeWarning`
-        If the image data has incompatible dtype.
-
-    :class:`~UnmatchedMetadataWarning`
-        If the image data has incompatible size with the metadata.
-        The metadata is discarded and the image is loaded with arbitrary dimensions.
+    - :class:`IncompatibleDtypeWarning`: If the image data has incompatible dtype.
+    - :class:`UnmatchedMetadataWarning`: If the image data has incompatible size
+      with the metadata.
+      The metadata is discarded and the image is loaded with arbitrary dimensions.
 
     """
     with tf.TiffFile(file_path) as tif:
@@ -818,32 +378,27 @@ def load_scitiff(
                 stacklevel=2,
                 category=ImageJMetadataNotFoundWarning,
             )
-            img = _fall_back_loader(file_path, squeeze=squeeze)
+            return _fall_back_loader(file_path, squeeze=squeeze)
+        try:
+            loaded_metadata = {
+                key: json.loads(value)
+                if _is_nested_value(SciTiffMetadataContainer.model_fields, key)
+                else value
+                for key, value in tif.imagej_metadata.items()
+            }
+            container = SciTiffMetadataContainer(**loaded_metadata)
+        except pydantic.ValidationError as e:
+            warnings.warn(
+                "Scitiff metadata is broken.\n"
+                "Loading the image with arbitrary dimensions...\n"
+                f"{e}",
+                stacklevel=2,
+                category=ScitiffMetadataWarning,
+            )
+            return _fall_back_loader(file_path, squeeze=squeeze)
         else:
-            try:
-                loaded_metadata = {
-                    key: json.loads(value)
-                    if _is_nested_value(SciTiffMetadataContainer.model_fields, key)
-                    else value
-                    for key, value in tif.imagej_metadata.items()
-                }
-                container = SciTiffMetadataContainer(**loaded_metadata)
-            except pydantic.ValidationError as e:
-                warnings.warn(
-                    "Scitiff metadata is broken.\n"
-                    "Loading the image with arbitrary dimensions...\n"
-                    f"{e}",
-                    stacklevel=2,
-                    category=ScitiffMetadataWarning,
-                )
-                img = _fall_back_loader(file_path, squeeze=squeeze)
-            else:
-                image_da = _read_image_as_dataarray(
-                    container.scitiffmeta.image, file_path
-                )
-                if squeeze:
-                    image_da = image_da.squeeze()
+            image_da = _read_image_as_dataarray(container.scitiffmeta.image, file_path)
+            if squeeze:
+                image_da = image_da.squeeze()
 
-                img = sc.DataGroup(image=image_da)
-
-    return img if not resolve_channels else resolve_scitiff_channels(img)
+            return sc.DataGroup(image=image_da)

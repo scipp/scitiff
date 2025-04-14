@@ -16,13 +16,5 @@ from ._schema import (
     SciTiffMetadata,
     SciTiffMetadataContainer,
 )
-from .io import (
-    concat_mask_as_channels,
-    concat_stdevs_and_mask_as_channels,
-    concat_stdevs_as_channels,
-    load_scitiff,
-    resolve_scitiff_channels,
-    save_scitiff,
-    to_scitiff_image,
-)
+from .io import load_scitiff, save_scitiff
 from .validator import validate_scitiff_metadata_container
