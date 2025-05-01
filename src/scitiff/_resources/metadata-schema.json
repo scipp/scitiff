@@ -1,41 +1,27 @@
+
 {
   "$defs": {
     "ImageDataArrayMetadata": {
       "description": "Image DataArray Metadata without values(image).",
       "properties": {
-        "data": {
-          "$ref": "#/$defs/ImageVariableMetadata"
-        },
+        "data": {"$ref": "#/$defs/ImageVariableMetadata"},
         "masks": {
-          "additionalProperties": {
-            "$ref": "#/$defs/ScippVariable"
-          },
+          "additionalProperties": {"$ref": "#/$defs/ScippVariable"},
           "title": "Masks",
           "type": "object"
         },
         "coords": {
-          "additionalProperties": {
-            "$ref": "#/$defs/ScippVariable"
-          },
+          "additionalProperties": {"$ref": "#/$defs/ScippVariable"},
           "title": "Coords",
           "type": "object"
         },
         "name": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
+          "anyOf": [{ "type": "string" }, { "type": "null" }],
           "default": null,
           "title": "Name"
         }
       },
-      "required": [
-        "data"
-      ],
+      "required": ["data"],
       "title": "ImageDataArrayMetadata",
       "type": "object"
     },
@@ -45,94 +31,38 @@
         "dims": {
           "maxItems": 5,
           "minItems": 5,
-          "prefixItems": [
-            {
-              "const": "t",
-              "type": "string"
-            },
-            {
-              "const": "z",
-              "type": "string"
-            },
-            {
-              "const": "c",
-              "type": "string"
-            },
-            {
-              "const": "y",
-              "type": "string"
-            },
-            {
-              "const": "x",
-              "type": "string"
-            }
-          ],
+          "prefixItems": [{ "const": "t", "type": "string" }, { "const": "z", "type": "string" }, { "const": "c", "type": "string" }, { "const": "y", "type": "string" }, { "const": "x", "type": "string" }],
           "title": "Dims",
           "type": "array"
         },
         "shape": {
           "maxItems": 5,
           "minItems": 5,
-          "prefixItems": [
-            {
-              "type": "integer"
-            },
-            {
-              "type": "integer"
-            },
-            {
-              "type": "integer"
-            },
-            {
-              "type": "integer"
-            },
-            {
-              "type": "integer"
-            }
-          ],
+          "prefixItems": [{ "type": "integer" }, { "type": "integer" }, { "type": "integer" }, { "type": "integer" }, { "type": "integer" }],
           "title": "Shape",
           "type": "array"
         },
         "unit": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
+          "anyOf": [{ "type": "string" }, { "type": "null" }],
           "title": "Unit"
         },
-        "dtype": {
-          "title": "Dtype",
-          "type": "string"
-        }
+        "dtype": {"title": "Dtype", "type": "string"}
       },
-      "required": [
-        "dims",
-        "shape",
-        "unit",
-        "dtype"
-      ],
+      "required": ["dims", "shape", "unit", "dtype"],
       "title": "ImageVariableMetadata",
       "type": "object"
     },
     "SciTiffMetadata": {
       "description": "SCITIFF Metadata.",
       "properties": {
-        "image": {
-          "$ref": "#/$defs/ImageDataArrayMetadata"
-        },
+        "image": {"$ref": "#/$defs/ImageDataArrayMetadata"},
         "schema_version": {
           "default": "{VERSION_PLACEHOLDER}",
           "title": "Schema Version",
           "type": "string"
         }
       },
-      "required": [
-        "image"
-      ],
+      "required": ["image"],
       "title": "SciTiffMetadata",
       "type": "object"
     },
@@ -140,65 +70,26 @@
       "description": "Scipp Variable Metadata with the values.\n\nOnly 1D variable is allowed for metadata.",
       "properties": {
         "dims": {
-          "items": {
-            "type": "string"
-          },
+          "items": {"type": "string"},
           "title": "Dims",
           "type": "array"
         },
         "shape": {
-          "items": {
-            "type": "integer"
-          },
+          "items": {"type": "integer"},
           "title": "Shape",
           "type": "array"
         },
         "unit": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
+          "anyOf": [{ "type": "string" }, { "type": "null" }],
           "title": "Unit"
         },
-        "dtype": {
-          "title": "Dtype",
-          "type": "string"
-        },
+        "dtype": {"title": "Dtype", "type": "string"},
         "values": {
-          "anyOf": [
-            {
-              "type": "number"
-            },
-            {
-              "type": "string"
-            },
-            {
-              "items": {
-                "type": "number"
-              },
-              "type": "array"
-            },
-            {
-              "items": {
-                "type": "string"
-              },
-              "type": "array"
-            }
-          ],
+          "anyOf": [{ "type": "number" }, { "type": "string" }, { "items": { "type": "number" }, "type": "array" }, { "items": { "type": "string" }, "type": "array" }],
           "title": "Values"
         }
       },
-      "required": [
-        "dims",
-        "shape",
-        "unit",
-        "dtype",
-        "values"
-      ],
+      "required": ["dims", "shape", "unit", "dtype", "values"],
       "title": "ScippVariable",
       "type": "object"
     }
@@ -206,13 +97,9 @@
   "additionalProperties": true,
   "description": "SCITIFF Compatible Metadata.",
   "properties": {
-    "scitiffmeta": {
-      "$ref": "#/$defs/SciTiffMetadata"
-    }
+    "scitiffmeta": {"$ref": "#/$defs/SciTiffMetadata"}
   },
-  "required": [
-    "scitiffmeta"
-  ],
+  "required": ["scitiffmeta"],
   "title": "SciTiffMetadataContainer",
   "type": "object"
 }

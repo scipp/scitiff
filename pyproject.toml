@@ -47,6 +47,7 @@ gui = [
 ]
 [project.scripts]
 scitiff-dev-dump-schemas = "scitiff._schema:dump_schemas"
+scitiff-dump-metadata-example = "scitiff.executables:dump_metadata_example"
 
 [project.urls]
 "Bug Tracker" = "https://github.com/ess-dmsc-dram/scitiff/issues"
