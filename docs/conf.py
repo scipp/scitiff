@@ -19,6 +19,8 @@ copyright = '2025 Scipp contributors'
 author = 'Scipp contributors'
 
 html_show_sourcelink = True
+autodoc_pydantic_model_show_json = True
+autodoc_pydantic_model_show_config_summary = True
 
 extensions = [
     'sphinx.ext.autodoc',
@@ -34,6 +36,7 @@ extensions = [
     'sphinx_design',
     'nbsphinx',
     'myst_parser',
+    'sphinxcontrib.autodoc_pydantic',
 ]
 
 
