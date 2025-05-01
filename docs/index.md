@@ -16,14 +16,14 @@ SciTiff format inherits [``HyperStacks``](https://imagejdocu.list.lu/gui/image/h
 > Currently there is only `python` io modules.
 
 ## Why SciTiff?
-`HyperStacks` has been a standard format of high energy imaging tiff images.
+`HyperStacks` has been a standard format for high energy imaging experiments.
 It defines dimensions of image stack (`t`, `z`, `c`, `y`, `x`).
 However, it does not guarantee the order of dimensions.
 Also, there is no standard way of storing the coordinate of each dimension.
 
 For example, if there are 1_000 tiff images along the `t` dimension, it is not clear if it is time of flight, or wall clock time or if it is every 1 ns or every 1 Å or if the interval is non-uniform or etc...
 
-Therefore `scitiff` project aims to define a consistent way of storing the physical properties of the tiff image as a metadata.
+Therefore `scitiff` project aims to define a consistent way of storing the physical properties of a tiff image stack as metadata.
 
 ## Quick Links
 
