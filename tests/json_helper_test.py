@@ -1,11 +1,12 @@
 # SPDX-License-Identifier: BSD-3-Clause
 # Copyright (c) 2025 Ess-dmsc-dram contributors (https://github.com/ess-dmsc-dram)
+import json
+
 from scitiff._json_helpers import beautify_json
 
 
 def test_beautifier_does_not_delete_anything():
     """Test that the beautifier does not delete anything."""
-    import json
 
     example = {
         "a": 1,
