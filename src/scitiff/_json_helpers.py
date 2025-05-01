@@ -61,4 +61,14 @@ def _json_beautified_dict(lines: str) -> str:
 
 def beautify_json(json_str: str) -> str:
     """Beautify the json string."""
-    return _json_beautified_dict(_json_beautified_array(json_str))
+    import json
+
+    original_dict = json.loads(json_str)
+    beautified_str = _json_beautified_dict(_json_beautified_array(json_str))
+    beautified_dict = json.loads(beautified_str)
+    if original_dict != beautified_dict:
+        raise ValueError(
+            "The beautified json does not match the original json. "
+            "Please check the implementation."
+        )
+    return beautified_str
