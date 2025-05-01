@@ -44,9 +44,11 @@ SciTiff Metadata Schema is written based on the [`scipp.DataArray`](https://scip
 You can (almost) directly turn the `image` field of the metadata into a `scipp.DataArray`.<br>
 But the `values` of the `image` is supposedly stored as tiff stack.
 
-The metadata schema is defined as a [`pydantic.Model`](https://docs.pydantic.dev/latest/concepts/models/) and exported as a plain text json so that any platform can use the schema.<br>
+```{note}
+  The metadata schema is defined as a [`pydantic.Model`](https://docs.pydantic.dev/latest/concepts/models/) and exported as a plain text json so that any platform can use the schema.
 
-> See [`ScitiffMetadataContainer source code`](/_modules/scitiff/_schema.html#SciTiffMetadataContainer) to see the pydantic model definition of the schema.
+  See source code of the [`ScitiffMetadataContainer`](https://ess-dmsc-dram.github.io/scitiff/_modules/scitiff/_schema.html#SciTiffMetadataContainer) to see the pydantic model definition.
+```
 
 ## Download Scitiff Metadata Schema
 {download}`Scitiff Metadata Schema Json File <./_static/metadata-schema.json>`
