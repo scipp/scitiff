@@ -5,6 +5,8 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
+from ._json_helpers import beautify_json
+
 TIME_DIMENSION_AND_COORDINATE_NAME = "t"
 """The name of the time dimension and coordinate."""
 ZAXIS_DIMENSION_AND_COORDINATE_NAME = "z"
@@ -99,13 +101,29 @@ class SciTiffMetadataContainer(BaseModel, extra="allow"):
 
 def dump_schemas():
     """Dump all schemas to JSON files."""
+    import argparse
     import json
     import pathlib
 
+    parser = argparse.ArgumentParser(
+        description="Dump metadata example into a json file."
+    )
+
     # Dump metadata schema
-    scitiff_metadata_schema = SciTiffMetadataContainer.model_json_schema()
-    metadata_json_path = (
+    default_metadata_json_path = (
         pathlib.Path(__file__).parent / "_resources/metadata-schema.json"
     )
-    with open(metadata_json_path, "w") as f:
-        json.dump(scitiff_metadata_schema, f, indent=2)
+
+    parser.add_argument(
+        "--output",
+        type=str,
+        default=default_metadata_json_path.as_posix(),
+        help="Output file name.",
+    )
+    args = parser.parse_args()
+    output_path = pathlib.Path(args.output)
+    output_path.write_text(
+        beautify_json(
+            json.dumps(SciTiffMetadataContainer.model_json_schema(), indent=2)
+        )
+    )
