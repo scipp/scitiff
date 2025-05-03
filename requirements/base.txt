@@ -31,7 +31,7 @@ rpds-py==0.24.0
     # via
     #   jsonschema
     #   referencing
-scipp==25.4.0
+scipp==25.5.0
     # via -r base.in
 tifffile==2025.3.30
     # via -r base.in
