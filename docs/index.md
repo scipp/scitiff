@@ -40,6 +40,15 @@ Here is an example of the scitiff metadata of a tiff file.
   :language: JSON
 :::
 
+```{warning}
+  Currently it is not allowed to have multi-dimensional coordinates in the metadata.<br>
+  All coordinate should be a `single` or `zero` dimensional data.<br>
+  For example, if you want to store `event_id`, which is folded into `(x, y)`, it is not possible.<br>
+  It is because we don't want to store huge coordinate values as a plain text,<br>
+  which can make a tiff file size unnecessarily large and make image loading slow.
+
+```
+
 SciTiff Metadata Schema is written based on the [`scipp.DataArray`](https://scipp.github.io/user-guide/data-structures/data-structures.html#DataArray) data structure.
 You can (almost) directly turn the `image` field of the metadata into a `scipp.DataArray`.<br>
 But the `values` of the `image` is supposedly stored as tiff stack.
