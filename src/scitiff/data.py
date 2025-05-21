@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 # Copyright (c) 2025 Ess-dmsc-dram contributors (https://github.com/ess-dmsc-dram)
+import numpy as np
 import scipp as sc
 
 
@@ -41,3 +42,33 @@ def hyperstack_example() -> sc.DataArray:
             'x': sc.linspace(dim='x', start=0.0, stop=400.0, num=400, unit='mm'),
         },
     )
+
+
+def hyperstack_example_with_variances_and_mask() -> sc.DataArray:
+    """Create a sample image with ImageJ Hyperstack.
+
+    The image is not aligned with the ImageJ Hyperstack default dimension order.
+    It has `c`, `t`, `z`, `y`, `x` dimensions with the following sizes:
+
+    - `c`: -
+    - `t`: 4
+    - `z`: 2
+    - `y`: 300
+    - `x`: 400
+
+    Channel 0 and 1 represents data and variances respectively.
+
+    """
+
+    da = hyperstack_example()['c', 0].copy().drop_coords('c')
+
+    # Make a random mask
+    rng = np.random.default_rng()
+    mask = sc.zeros_like(da.data).to(dtype=bool)
+    mask.unit = None
+    mask.values = rng.integers(2, size=mask.shape, dtype=bool)
+    # Add the mask to the data array
+    da.masks['mask'] = mask
+    # Add variances
+    da.variances = da.values * 0.1
+    return da
