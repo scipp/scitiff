@@ -104,28 +104,37 @@ def test_save_wrong_dtype_raises(sample_image: sc.DataArray) -> None:
 
 
 def _save_data_array_with_wrong_dtype(
-    da: sc.DataArray, file_path: str | pathlib.Path
+    da: sc.DataArray, file_path: str | pathlib.Path, dtype: str
 ) -> None:
     final_image = to_scitiff_image(da)
     metadata = extract_metadata(final_image)
     tf.imwrite(
         file_path,
-        final_image.values.astype('uint8'),
+        final_image.values.astype(dtype),
         imagej=True,
         metadata={
             key: json.dumps(value)
             for key, value in metadata.model_dump(mode="json").items()
         },
-        dtype='uint8',
+        dtype=dtype,
     )
 
 
-def test_load_incompatible_dtype_warns(sample_image: sc.DataArray, tmp_path) -> None:
+# We just check uint8 and uint16
+# as they are the only ones that are supported by tifffile with ImageJ metadata
+@pytest.mark.parametrize(
+    ('dtype', 'expected_dtype'),
+    [('uint8', 'int32'), ('uint16', 'int32')],
+)
+def test_load_incompatible_dtype_warns(
+    sample_image: sc.DataArray, tmp_path, dtype, expected_dtype
+) -> None:
     tmp_file_path = tmp_path / 'wrong_dtype.tiff'
-    _save_data_array_with_wrong_dtype(sample_image, tmp_file_path)
+    _save_data_array_with_wrong_dtype(sample_image, tmp_file_path, dtype=dtype)
     with pytest.warns(
         IncompatibleDtypeWarning,
-        match="dtype of ``uint8``. The dtype will be converted to ``float32``",
+        match=f"dtype of ``{dtype}``. "
+        f"The dtype will be converted to ``<class 'numpy.{expected_dtype}'>``",
     ):
         loaded_image = load_scitiff(tmp_file_path)['image']
         assert loaded_image.dims == tuple(
