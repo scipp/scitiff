@@ -228,6 +228,7 @@ def test_to_scitiff_image_with_mask(
 ) -> None:
     mask = sc.zeros_like(sample_image.data).astype(bool)
     mask['t', 0]['y', 1]['x', 2] = True
+    mask.unit = None  # Mask should not have a unit
     sample_image.masks['mask'] = mask
 
     with multichannel_functionality_warning():
@@ -245,9 +246,9 @@ def test_to_scitiff_image_with_mask(
         squeezed['c', sc.scalar(Channel.intensities.value)].data,
         sc.values(sample_image.data),
     )
-    assert_identical(
-        squeezed['c', sc.scalar(Channel.mask.value)].data,
-        mask.astype(sample_image.dtype),
+    np.all(
+        squeezed['c', sc.scalar(Channel.mask.value)].data.values
+        == mask.astype(sample_image.dtype).values,
     )
 
 
@@ -257,6 +258,7 @@ def test_to_scitiff_image_variances_and_mask(
 ) -> None:
     mask = sc.zeros_like(sample_image.data).astype(bool)
     mask['t', 0]['y', 1]['x', 2] = True
+    mask.unit = None  # Mask should not have a unit
     sample_image.masks['mask'] = mask
     sample_image.variances = (sample_image**2).values
 
@@ -280,9 +282,9 @@ def test_to_scitiff_image_variances_and_mask(
         squeezed['c', sc.scalar(Channel.stdevs.value)].data,
         sc.stddevs(sample_image.data),
     )
-    assert_identical(
-        squeezed['c', sc.scalar(Channel.mask.value)].data,
-        mask.astype(sample_image.dtype),
+    np.all(
+        squeezed['c', sc.scalar(Channel.mask.value)].data.values
+        == mask.astype(sample_image.dtype).values,
     )
 
 
@@ -334,9 +336,9 @@ def test_concat_scitiff_channels_intensities_mask(
         two_channel_image['c', sc.scalar(Channel.intensities.value)].data,
         sc.values(sample_image.data),
     )
-    assert_identical(
-        two_channel_image['c', sc.scalar(Channel.mask.value)].data,
-        mask.astype(sample_image.dtype),
+    np.all(
+        two_channel_image['c', sc.scalar(Channel.mask.value)].data.values
+        == mask.astype(sample_image.dtype).values,
     )
 
 
@@ -477,11 +479,11 @@ def test_resolve_scitiff_channels_intensities_variances(
 def test_resolve_scitiff_channels_intensities_mask(
     sample_image: sc.DataArray,
 ) -> None:
-    sample_mask = (sample_image < sc.scalar(200.0, unit=sample_image.unit)).astype(
-        'float32', copy=False
-    )
+    sample_mask = sample_image < sc.scalar(200.0, unit=sample_image.unit)
     sample_mask.unit = sample_image.unit
-    two_channel_image = sc.concat([sample_image, sample_mask], dim='c')
+    two_channel_image = sc.concat(
+        [sample_image, sample_mask.astype('float32', copy=False)], dim='c'
+    )
     two_channel_image.coords['c'] = sc.array(
         dims=['c'], values=[Channel.intensities.value, Channel.mask.value]
     )
@@ -489,6 +491,8 @@ def test_resolve_scitiff_channels_intensities_mask(
         resolved_image = resolve_scitiff_channels(two_channel_image)
     assert resolved_image.dims == ('t', 'y', 'x')
     assert_identical(sample_image.data, sc.values(resolved_image.data))
+
+    sample_mask.unit = None
     assert_identical(
         resolved_image.masks['scitiff-mask'], sample_mask.data.astype(bool, copy=False)
     )
@@ -498,11 +502,12 @@ def test_resolve_scitiff_channels_intensities_variances_mask(
     sample_image: sc.DataArray,
 ) -> None:
     sample_stdevs = sample_image.copy(deep=False)
-    sample_mask = (sample_image < sc.scalar(200.0, unit=sample_image.unit)).astype(
-        'float32', copy=False
-    )
+    sample_mask = sample_image < sc.scalar(200.0, unit=sample_image.unit)
     sample_mask.unit = sample_image.unit
-    three_channel_image = sc.concat([sample_stdevs, sample_image, sample_mask], dim='c')
+    three_channel_image = sc.concat(
+        [sample_stdevs, sample_image, sample_mask.astype('float32', copy=False)],
+        dim='c',
+    )
     three_channel_image.coords['c'] = sc.array(
         dims=['c'],
         values=[Channel.stdevs.value, Channel.intensities.value, Channel.mask.value],
@@ -512,6 +517,8 @@ def test_resolve_scitiff_channels_intensities_variances_mask(
     assert resolved_image.dims == ('t', 'y', 'x')
     assert np.all(resolved_image.variances == (sample_image**2).values)
     assert_identical(sample_image.data, sc.values(resolved_image.data))
+
+    sample_mask.unit = None
     assert_identical(
         resolved_image.masks['scitiff-mask'], sample_mask.data.astype(bool, copy=False)
     )
@@ -522,11 +529,12 @@ def test_resolve_scitiff_channels_intensities_variances_mask_on_datagroup(
 ) -> None:
     sample_stdevs = sample_image.copy(deep=False)
     sample_stdevs.unit = sample_image.unit
-    sample_mask = (sample_image < sc.scalar(200.0, unit=sample_image.unit)).astype(
-        'float32', copy=False
-    )
+    sample_mask = sample_image < sc.scalar(200.0, unit=sample_image.unit)
     sample_mask.unit = sample_image.unit
-    three_channel_image = sc.concat([sample_stdevs, sample_image, sample_mask], dim='c')
+    three_channel_image = sc.concat(
+        [sample_stdevs, sample_image, sample_mask.astype('float32', copy=False)],
+        dim='c',
+    )
     three_channel_image.coords['c'] = sc.array(
         dims=['c'],
         values=[Channel.stdevs.value, Channel.intensities.value, Channel.mask.value],
@@ -538,6 +546,8 @@ def test_resolve_scitiff_channels_intensities_variances_mask_on_datagroup(
     assert resolved_image.dims == ('t', 'y', 'x')
     assert np.all(resolved_image.variances == (sample_image.data**2).values)
     assert_identical(sample_image.data, sc.values(resolved_image.data))
+
+    sample_mask.unit = None
     assert_identical(
         resolved_image.masks['scitiff-mask'], sample_mask.data.astype(bool, copy=False)
     )

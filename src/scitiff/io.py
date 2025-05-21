@@ -4,7 +4,7 @@ import json
 import pathlib
 import warnings
 from enum import Enum
-from typing import TypeVar
+from typing import Literal, TypeVar, overload
 
 import numpy as np
 import pydantic
@@ -161,7 +161,8 @@ def _retrieve_mask_and_wrap_as_dataarray(
 
     if mask is not None and mask_name is not None:
         mask_channel = da.copy(deep=False)
-        mask_channel.data = mask.to(unit=da.unit, dtype=da.dtype)
+        mask_channel.data = mask.to(dtype=da.dtype)
+        mask_channel.unit = da.unit  # Overwrite the unit
         mask_channel.name = mask_name
         # Assign channel coordinate
         mask_channel.coords[CHANNEL_DIM] = sc.scalar(value=Channel.mask.value)
@@ -405,11 +406,29 @@ def concat_stdevs_and_mask_as_channels(
     )
 
 
+@overload
 def to_scitiff_image(
     da: sc.DataArray,
+    *,
+    concat_stdevs_and_mask: Literal[False],
+) -> sc.DataArray: ...
+
+
+@overload
+def to_scitiff_image(
+    da: sc.DataArray,
+    *,
+    concat_stdevs_and_mask: Literal[True],
+    mask_name: str | None = None,
+) -> sc.DataArray: ...
+
+
+def to_scitiff_image(
+    da: sc.DataArray,
+    *,
     concat_stdevs_and_mask: bool = False,
     mask_name: str | None = None,
-) -> sc.DataArray:
+) -> sc.DataArray | sc.Dataset:
     """Modify dimnesions and shapes to match the scitiff image schema.
 
     The function will modify the dimensions and shapes of the DataArray.
@@ -427,8 +446,8 @@ def to_scitiff_image(
         The default is False.
 
     mask_name:
-        It will be ignored if the ``concat_stdevs_and_mask`` is ``False``.
         The name of the mask to be concatenated as a separate channel.
+        It will be ignored if the ``concat_stdevs_and_mask`` is ``False``.
         If ``None``, it will try to find a single mask
         with the same size as the ``da``.
         If there are multiple masks with the same size, masks will be ignored.
@@ -487,8 +506,16 @@ def _validate_dtypes(da: sc.DataArray) -> None:
         )
 
 
-def _save_data_array(da: sc.DataArray, file_path: str | pathlib.Path) -> None:
-    final_image = to_scitiff_image(da)
+def _save_data_array(
+    da: sc.DataArray,
+    file_path: str | pathlib.Path,
+    *,
+    concat_stdevs_and_mask: bool = False,
+    mask_name: str | None = None,
+) -> None:
+    final_image = to_scitiff_image(
+        da, concat_stdevs_and_mask=concat_stdevs_and_mask, mask_name=mask_name
+    )
     metadata = extract_metadata(final_image)
     _validate_dtypes(final_image)
     tf.imwrite(
@@ -507,7 +534,11 @@ def _save_data_array(da: sc.DataArray, file_path: str | pathlib.Path) -> None:
 
 
 def save_scitiff(
-    dg: sc.DataGroup | sc.DataArray, file_path: str | pathlib.Path
+    dg: sc.DataGroup | sc.DataArray,
+    file_path: str | pathlib.Path,
+    *,
+    concat_stdevs_and_mask: bool = False,
+    mask_name: str | None = None,
 ) -> None:
     """Save an image in scipp data structure to a SCITIFF format including metadata.
 
@@ -553,6 +584,17 @@ def save_scitiff(
     file_path:
         The path to save the image data.
 
+    concat_stdevs_and_mask:
+        If True, ``stdevs`` and a ``mask`` will be concatenated into channel dimension.
+        The default is False.
+
+    mask_name:
+        The name of the mask to be concatenated as a separate channel.
+        It will be ignored if the ``concat_stdevs_and_mask`` is ``False``.
+        If ``None`` while ``concat_stdevs_and_mask`` is ``True``,
+        it will try to find a single mask with the same size as the image.
+        If there are multiple masks with the same size, masks will be ignored.
+
     Raises
     ------
     ValueError
@@ -566,7 +608,12 @@ def save_scitiff(
 
     """
     if isinstance(dg, sc.DataArray):
-        _save_data_array(dg, file_path)
+        _save_data_array(
+            dg,
+            file_path,
+            concat_stdevs_and_mask=concat_stdevs_and_mask,
+            mask_name=mask_name,
+        )
     else:
         raise NotImplementedError("Saving DataGroup to SCITIFF is not yet implemented.")
 
@@ -683,7 +730,7 @@ def _fall_back_loader(
 
 class Channel(Enum):
     intensities = "intensities"
-    stdevs = "stedvs"
+    stdevs = "stdevs"
     mask = "mask"
 
 
@@ -730,6 +777,7 @@ def _resolve_channels(da: sc.DataArray) -> sc.DataArray:
     if Channel.mask.value in c_coord.values:
         mask = da[CHANNEL_DIM, sc.scalar(Channel.mask.value)]
         intensities.masks['scitiff-mask'] = mask.data.astype(bool)
+        intensities.masks['scitiff-mask'].unit = None  # Remove the unit as it is a mask
 
     return intensities
 
