@@ -4,7 +4,7 @@ import json
 import pathlib
 import warnings
 from enum import Enum
-from typing import Literal, TypeVar, overload
+from typing import TypeVar
 
 import numpy as np
 import pydantic
@@ -393,7 +393,6 @@ def concat_stdevs_and_mask_as_channels(
         1D masks or remove them before saving the image.
 
     """
-    _warn_about_multi_channel_images()
     da = _validate_da_and_squeeze_channel(da)
 
     # Retrieving mask first to get rid of the mask from the DataArray
@@ -401,32 +400,19 @@ def concat_stdevs_and_mask_as_channels(
     mask_channel = _retrieve_mask_and_wrap_as_dataarray(da, mask_name)
     stdevs = _retrieve_stdevs_and_wrap_as_dataarray(da)
     # Concatenate all one-three channels
+
+    if not (mask_channel is None and stdevs is None):
+        _warn_about_multi_channel_images()
+
     return _concat_intensities_stdevs_and_mask(
         da, mask_channel=mask_channel, stdevs_channel=stdevs
     )
 
 
-@overload
 def to_scitiff_image(
     da: sc.DataArray,
     *,
-    concat_stdevs_and_mask: Literal[False],
-) -> sc.DataArray: ...
-
-
-@overload
-def to_scitiff_image(
-    da: sc.DataArray,
-    *,
-    concat_stdevs_and_mask: Literal[True],
-    mask_name: str | None = None,
-) -> sc.DataArray: ...
-
-
-def to_scitiff_image(
-    da: sc.DataArray,
-    *,
-    concat_stdevs_and_mask: bool = False,
+    concat_stdevs_and_mask: bool = True,
     mask_name: str | None = None,
 ) -> sc.DataArray | sc.Dataset:
     """Modify dimnesions and shapes to match the scitiff image schema.
@@ -537,7 +523,7 @@ def save_scitiff(
     dg: sc.DataGroup | sc.DataArray,
     file_path: str | pathlib.Path,
     *,
-    concat_stdevs_and_mask: bool = False,
+    concat_stdevs_and_mask: bool = True,
     mask_name: str | None = None,
 ) -> None:
     """Save an image in scipp data structure to a SCITIFF format including metadata.
@@ -585,8 +571,8 @@ def save_scitiff(
         The path to save the image data.
 
     concat_stdevs_and_mask:
-        If True, ``stdevs`` and a ``mask`` will be concatenated into channel dimension.
-        The default is False.
+        If `True`, ``stdevs`` and a ``mask`` will be concatenated
+        into channel dimension. The default is `True`.
 
     mask_name:
         The name of the mask to be concatenated as a separate channel.
@@ -755,13 +741,12 @@ class Channel(Enum):
 
 def _resolve_channels(da: sc.DataArray) -> sc.DataArray:
     if (
-        da.sizes.get(CHANNEL_DIM, 0) == 0
+        da.sizes.get(CHANNEL_DIM, 0) <= 1
         or CHANNEL_DIM not in da.coords
         or da.coords[CHANNEL_DIM].dim != CHANNEL_DIM
     ):
-        raise ValueError(
-            "There is no coordinate or dimension named 'c' in the DataArray. "
-        )
+        # No need to resolve channels
+        return da
 
     all_channel_names = [name.value for name in Channel]
     c_coord = da.coords[CHANNEL_DIM]
@@ -818,7 +803,11 @@ def resolve_scitiff_channels(scitiff_image: T) -> T:
         with values of 'intensities', 'stdevs', and 'mask' (see :class:`~.Channel`).
 
     """
-    _warn_about_multi_channel_images()
+    if (n_channel := scitiff_image.sizes.get(CHANNEL_DIM)) is not None and (
+        n_channel > 1
+    ):
+        _warn_about_multi_channel_images()
+
     if isinstance(scitiff_image, sc.DataGroup):
         return sc.DataGroup(
             image=_resolve_channels(scitiff_image['image']),
@@ -832,7 +821,7 @@ def load_scitiff(
     file_path: str | pathlib.Path,
     *,
     squeeze: bool = True,
-    resolve_channels: bool = False,
+    resolve_channels: bool = True,
 ) -> sc.DataGroup:
     """Load an image in SCITIFF format to a scipp data structure.
 
@@ -849,7 +838,8 @@ def load_scitiff(
         If True, the channel dimension is resolved as intensities, stdevs and mask.
 
         .. warning::
-            This function is not yet officially supported by ``Scitiff`` schema.
+            Channel interpreted as intensities, variances and mask
+            is not yet officially specified by ``Scitiff`` schema.
             It may change in the future.
 
     Returns
@@ -875,6 +865,11 @@ def load_scitiff(
     :class:`~UnmatchedMetadataWarning`
         If the image data has incompatible size with the metadata.
         The metadata is discarded and the image is loaded with arbitrary dimensions.
+
+    :class:`FutureWarning`
+        If the image data has multiple channels.
+        The muti-channel neutron images are not yet officially supported
+        by the scitiff schema.
 
     """
     with tf.TiffFile(file_path) as tif:

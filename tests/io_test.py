@@ -137,7 +137,7 @@ def test_load_scipp_incompatible_dtype_fallback(
         match=f"dtype of ``{dtype}``. "
         f"The dtype will be converted to ``<class 'numpy.{expected_dtype}'>``",
     ):
-        loaded_image = load_scitiff(tmp_file_path)['image']
+        loaded_image = load_scitiff(tmp_file_path, resolve_channels=False)['image']
         assert loaded_image.dims == tuple(
             f"dim_{i}" for i in range(3)
         )  # Image is squeezed
@@ -506,9 +506,7 @@ def test_concat_scitiff_channels_intensities_variances_masks_only_variances(
 def test_concat_scitiff_channels_intensities_variances_masks_nothing(
     sample_image: sc.DataArray,
 ) -> None:
-    with multichannel_functionality_warning():
-        just_image = concat_stdevs_and_mask_as_channels(sample_image)
-
+    just_image = concat_stdevs_and_mask_as_channels(sample_image)
     expected_coord = sc.array(dims=['c'], values=[Channel.intensities.value])
     assert_identical(just_image.coords['c'], expected_coord)
     assert_identical(
