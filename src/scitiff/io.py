@@ -4,7 +4,7 @@ import json
 import pathlib
 import warnings
 from enum import Enum
-from typing import TypeVar
+from typing import Literal, TypeVar, overload
 
 import numpy as np
 import pydantic
@@ -409,6 +409,7 @@ def concat_stdevs_and_mask_as_channels(
     )
 
 
+@overload
 def to_scitiff_image(
     da: sc.DataArray,
     *,
