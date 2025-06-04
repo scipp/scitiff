@@ -137,17 +137,11 @@ def test_load_scipp_incompatible_dtype_fallback(
         match=f"dtype of ``{dtype}``. "
         f"The dtype will be converted to ``<class 'numpy.{expected_dtype}'>``",
     ):
-        if dtype in ['int8', 'int16', 'float16']:
-            with pytest.warns(
-                ImageJMetadataNotFoundWarning, match='ImageJ metadata not found'
-            ):  # These dtypes are not supported by tifffile with `imagej=True`
-                loaded_image = load_scitiff(tmp_file_path)['image']
-        else:
-            loaded_image = load_scitiff(tmp_file_path)['image']
-
+        loaded_image = load_scitiff(tmp_file_path)['image']
         assert loaded_image.dims == tuple(
             f"dim_{i}" for i in range(3)
         )  # Image is squeezed
+        assert loaded_image.dtype == expected_dtype
 
 
 @pytest.mark.parametrize(
@@ -173,6 +167,7 @@ def test_load_imagej_scipp_incompatible_dtype_fallback(
         assert loaded_image.dims == tuple(
             f"dim_{i}" for i in range(3)
         )  # Image is squeezed
+        assert loaded_image.dtype == expected_dtype
 
 
 @pytest.mark.parametrize(('dtype', 'expected_dtype'), [('float64', 'float64')])
