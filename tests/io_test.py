@@ -111,24 +111,25 @@ def _save_data_array_with_wrong_dtype(
     tf.imwrite(
         file_path,
         final_image.values.astype(dtype),
-        imagej=True,
+        imagej=True if dtype in ['uint8', 'uint16', 'float32'] else False,
         metadata={
             key: json.dumps(value)
             for key, value in metadata.model_dump(mode="json").items()
         },
+        photometric='minisblack',  # int8/int16/float16 dtype can be stored as `rgb`
+        # in some versions of `tifffile`
         dtype=dtype,
     )
 
 
-# We just check uint8 and uint16
-# as they are the only ones that are supported by tifffile with ImageJ metadata
 @pytest.mark.parametrize(
     ('dtype', 'expected_dtype'),
     [('uint8', 'int32'), ('uint16', 'int32')],
 )
-def test_load_incompatible_dtype_warns(
+def test_load_scipp_incompatible_dtype_fallback(
     sample_image: sc.DataArray, tmp_path, dtype, expected_dtype
 ) -> None:
+    """Test scipp incompatible dtypes but compatible with ImageJ."""
     tmp_file_path = tmp_path / 'wrong_dtype.tiff'
     _save_data_array_with_wrong_dtype(sample_image, tmp_file_path, dtype=dtype)
     with pytest.warns(
@@ -136,10 +137,61 @@ def test_load_incompatible_dtype_warns(
         match=f"dtype of ``{dtype}``. "
         f"The dtype will be converted to ``<class 'numpy.{expected_dtype}'>``",
     ):
-        loaded_image = load_scitiff(tmp_file_path)['image']
+        if dtype in ['int8', 'int16', 'float16']:
+            with pytest.warns(
+                ImageJMetadataNotFoundWarning, match='ImageJ metadata not found'
+            ):  # These dtypes are not supported by tifffile with `imagej=True`
+                loaded_image = load_scitiff(tmp_file_path)['image']
+        else:
+            loaded_image = load_scitiff(tmp_file_path)['image']
+
         assert loaded_image.dims == tuple(
             f"dim_{i}" for i in range(3)
         )  # Image is squeezed
+
+
+@pytest.mark.parametrize(
+    ('dtype', 'expected_dtype'),
+    [('int8', 'int32'), ('int16', 'int32'), ('float16', 'float32')],
+)
+def test_load_imagej_scipp_incompatible_dtype_fallback(
+    sample_image: sc.DataArray, tmp_path, dtype, expected_dtype
+) -> None:
+    """Test ImageJ and scipp incompatible dtypes."""
+    tmp_file_path = tmp_path / 'wrong_dtype.tiff'
+    _save_data_array_with_wrong_dtype(sample_image, tmp_file_path, dtype=dtype)
+    with pytest.warns(
+        IncompatibleDtypeWarning,
+        match=f"dtype of ``{dtype}``. "
+        f"The dtype will be converted to ``<class 'numpy.{expected_dtype}'>``",
+    ):
+        with pytest.warns(
+            ImageJMetadataNotFoundWarning, match='ImageJ metadata not found'
+        ):  # These dtypes are not supported by tifffile with `imagej=True`
+            loaded_image = load_scitiff(tmp_file_path)['image']
+
+        assert loaded_image.dims == tuple(
+            f"dim_{i}" for i in range(3)
+        )  # Image is squeezed
+
+
+@pytest.mark.parametrize(('dtype', 'expected_dtype'), [('float64', 'float64')])
+def test_load_imagej_incompatible_dtype_fallback(
+    sample_image: sc.DataArray, tmp_path, dtype, expected_dtype
+) -> None:
+    """Test ImageJ incompatible but scipp compatible dtypes.
+
+    float64 is supported by scipp so it should not raise a dtype conversion warning.
+    """
+    tmp_file_path = tmp_path / 'wrong_dtype.tiff'
+    _save_data_array_with_wrong_dtype(sample_image, tmp_file_path, dtype=dtype)
+    with pytest.warns(
+        ImageJMetadataNotFoundWarning, match='ImageJ metadata not found'
+    ):  # These dtypes are not supported by tifffile with `imagej=True`
+        loaded_image = load_scitiff(tmp_file_path)['image']
+
+    assert loaded_image.dims == tuple(f"dim_{i}" for i in range(3))  # Image is squeezed
+    assert loaded_image.dtype == expected_dtype
 
 
 def _save_data_array_with_unmatching_shape(
