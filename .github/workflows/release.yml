@@ -58,6 +58,7 @@ jobs:
           name: dist
           path: dist
 
+  # Skipping conda upload since we directly deploy to conda-forge
   upload_pypi:
     name: Deploy PyPI
     needs: [build_wheels, build_conda]
@@ -70,26 +71,7 @@ jobs:
       - uses: actions/download-artifact@v4
       - uses: pypa/gh-action-pypi-publish@v1.12.4
 
-  # Skipping conda upload until we have a token.
-  # upload_conda:
-  #   name: Deploy Conda
-  #   needs: [build_wheels, build_conda]
-  #   runs-on: 'ubuntu-24.04'
-  #   if: github.event_name == 'release' && github.event.action == 'published'
-
-  #   steps:
-  #     - uses: actions/download-artifact@v4
-  #     - uses: mamba-org/setup-micromamba@v1
-  #       with:
-  #         environment-name: upload-env
-  #         # frozen python due to breaking removal of 'imp' in 3.12
-  #         create-args: >-
-  #           anaconda-client
-  #           python=3.11
-  #     - run: anaconda --token ${{ secrets.ANACONDATOKEN }} upload --user essdmsc --label main $(ls conda-package-noarch/*.tar.bz2)
-
   docs:
-    # needs: [upload_conda, upload_pypi]
     needs: [upload_pypi]
     uses: ./.github/workflows/docs.yml
     with:
