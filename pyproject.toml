@@ -1,6 +1,6 @@
 [build-system]
 requires = [
-  "setuptools>=68",
+  "setuptools>=77",
   "setuptools_scm[toml]>=8.0",
 ]
 build-backend = "setuptools.build_meta"
@@ -9,11 +9,11 @@ build-backend = "setuptools.build_meta"
 name = "scitiff"
 description = "Scientific tiff format for imaging experiments."
 authors = [{ name = "Scipp contributors" }]
-license = { file = "LICENSE" }
+license = "BSD-3-Clause"
+license-files = ["LICENSE"]
 readme = "README.md"
 classifiers = [
     "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: BSD License",
     "Natural Language :: English",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
@@ -50,9 +50,9 @@ scitiff-dev-dump-schemas = "scitiff._schema:dump_schemas"
 scitiff-dump-metadata-example = "scitiff.executables:dump_metadata_example"
 
 [project.urls]
-"Bug Tracker" = "https://github.com/ess-dmsc-dram/scitiff/issues"
-"Documentation" = "https://ess-dmsc-dram.github.io/scitiff"
-"Source" = "https://github.com/ess-dmsc-dram/scitiff"
+"Bug Tracker" = "https://github.com/scipp/scitiff/issues"
+"Documentation" = "https://scipp.github.io/scitiff"
+"Source" = "https://github.com/scipp/scitiff"
 
 [tool.setuptools_scm]
 

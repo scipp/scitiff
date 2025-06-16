@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: BSD-3-Clause
-# Copyright (c) 2025 Ess-dmsc-dram contributors (https://github.com/ess-dmsc-dram)
+# Copyright (c) 2025 Scipp contributors (https://github.com/scipp)
 
 import doctest
 import os
@@ -39,6 +39,15 @@ extensions = [
     'sphinxcontrib.autodoc_pydantic',
 ]
 
+try:
+    import sciline.sphinxext.domain_types  # noqa: F401
+
+    extensions.append('sciline.sphinxext.domain_types')
+    # See https://github.com/tox-dev/sphinx-autodoc-typehints/issues/457
+    suppress_warnings = ["config.cache"]
+except ModuleNotFoundError:
+    pass
+
 
 myst_enable_extensions = [
     "amsmath",
@@ -64,6 +73,7 @@ autodoc_type_aliases = {
 intersphinx_mapping = {
     'python': ('https://docs.python.org/3', None),
     'numpy': ('https://numpy.org/doc/stable/', None),
+    'scipp': ('https://scipp.github.io/', None),
 }
 
 # autodocs includes everything, even irrelevant API internals. autosummary
@@ -148,15 +158,15 @@ html_theme_options = {
         "image_dark": "_static/logo-dark.svg",
     },
     "external_links": [
-        {"name": "EasyImaging", "url": "https://ess-dmsc-dram.github.io/easyimaging"},
-        {"name": "ESSImaging", "url": "https://ess-dmsc-dram.github.io/essimaging"},
-        {"name": "Plopp", "url": "https://ess-dmsc-dram.github.io/plopp"},
-        {"name": "Scipp", "url": "https://ess-dmsc-dram.github.io"},
+        {"name": "EasyImaging", "url": "https://scipp.github.io/easyimaging"},
+        {"name": "ESSImaging", "url": "https://scipp.github.io/essimaging"},
+        {"name": "Plopp", "url": "https://scipp.github.io/plopp"},
+        {"name": "Scipp", "url": "https://scipp.github.io"},
     ],
     "icon_links": [
         {
             "name": "GitHub",
-            "url": "https://github.com/ess-dmsc-dram/scitiff",
+            "url": "https://github.com/scipp/scitiff",
             "icon": "fa-brands fa-github",
             "type": "fontawesome",
         },
@@ -168,7 +178,7 @@ html_theme_options = {
         },
         {
             "name": "Conda",
-            "url": "https://anaconda.org/ess-dmsc-dram/scitiff",
+            "url": "https://anaconda.org/scipp/scitiff",
             "icon": "fa-custom fa-anaconda",
             "type": "fontawesome",
         },
@@ -246,4 +256,7 @@ doctest_default_flags = (
 linkcheck_ignore = [
     # Specific lines in Github blobs cannot be found by linkcheck.
     r'https?://github\.com/.*?/blob/[a-f0-9]+/.+?#',
+    # Linkcheck seems to be denied access by some DOI resolvers.
+    # Since DOIs are supposed to be permanent, we don't need to check them.'
+    r'https://doi\.org/',
 ]
