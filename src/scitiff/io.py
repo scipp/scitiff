@@ -633,14 +633,33 @@ def _wrap_as_arbitrary_variable(image_values: np.ndarray) -> sc.Variable:
     try:
         return sc.array(dims=arbitrary_dims, values=image_values)
     except RuntimeError:
+        # Decide the dtype to be used
+        # Supported dtypes are skipped since it should have been
+        # already handled in the try block.
+        dtype = image_values.dtype
+        match image_values.dtype:
+            case np.int8 | np.int16 | np.uint8 | np.uint16:
+                dtype = np.int32
+            case np.uint32:
+                dtype = np.int64
+            case np.float16:
+                dtype = np.float32
+            case _:
+                raise RuntimeError(
+                    f"Unsupported dtype: {image_values.dtype}. "
+                    "Try using ``tifffile.imread`` to load the image data. "
+                ) from None
+
         warnings.warn(
             "The image data does not have compatible dtype. "
             f"The image has dtype of ``{image_values.dtype}``. "
-            "The dtype will be converted to ``float32``.",
+            f"The dtype will be converted to ``{dtype}``.",
             stacklevel=2,
             category=IncompatibleDtypeWarning,
         )
-        return sc.array(dims=arbitrary_dims, values=image_values.astype(np.float32))
+        return sc.array(
+            dims=arbitrary_dims, values=image_values.astype(dtype, copy=False)
+        )
 
 
 def _find_real_shape(
