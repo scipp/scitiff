@@ -49,9 +49,9 @@ build:
     - python -m pip install .
 
 about:
-  home: https://github.com/ess-dmsc-dram/scitiff
+  home: https://github.com/scipp/scitiff
   license: BSD-3-Clause
   summary: Scientific tiff format for imaging experiments.
   description: Scientific tiff format for imaging experiments.
-  dev_url: https://github.com/ess-dmsc-dram/scitiff
-  doc_url: https://ess-dmsc-dram.github.io/scitiff
+  dev_url: https://github.com/scipp/scitiff
+  doc_url: https://scipp.github.io/scitiff
