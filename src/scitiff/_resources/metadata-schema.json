@@ -1,6 +1,18 @@
 
 {
   "$defs": {
+    "DAQMetadata": {
+      "properties": {
+        "instrument": {
+          "default": "Unknown",
+          "description": "Instrument name",
+          "title": "Instrument",
+          "type": "string"
+        }
+      },
+      "title": "DAQMetadata",
+      "type": "object"
+    },
     "ImageDataArrayMetadata": {
       "description": "Image DataArray Metadata without values(image).",
       "properties": {
@@ -56,6 +68,7 @@
       "description": "SCITIFF Metadata.",
       "properties": {
         "image": {"$ref": "#/$defs/ImageDataArrayMetadata"},
+        "daq": {"$ref": "#/$defs/DAQMetadata"},
         "schema_version": {
           "default": "{VERSION_PLACEHOLDER}",
           "title": "Schema Version",

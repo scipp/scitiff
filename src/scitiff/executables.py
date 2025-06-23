@@ -6,6 +6,7 @@ from . import __version__
 from ._json_helpers import beautify_json
 from ._schema import (
     SCITIFF_IMAGE_STACK_DIMENSIONS,
+    DAQMetadata,
     ImageDataArrayMetadata,
     ImageVariableMetadata,
     ScippVariable,
@@ -46,7 +47,11 @@ def _build_dummy_metadata() -> SciTiffMetadataContainer:
         },
     )
     return SciTiffMetadataContainer(
-        scitiffmeta=SciTiffMetadata(image=image_meta, schema_version=__version__)
+        scitiffmeta=SciTiffMetadata(
+            image=image_meta,
+            daq=DAQMetadata(instrument='ess'),
+            schema_version=__version__,
+        )
     )
 
 

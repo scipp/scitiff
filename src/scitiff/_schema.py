@@ -86,10 +86,16 @@ class ScippDataArray(ScippDataArrayMetadata):
     data: ScippVariable
 
 
+class DAQMetadata(BaseModel):
+    instrument: str = Field(default="Unknown", description="Instrument name")
+    """Instrument name."""
+
+
 class SciTiffMetadata(BaseModel):
     """SCITIFF Metadata."""
 
     image: ImageDataArrayMetadata
+    daq: DAQMetadata = Field(default_factory=DAQMetadata)
     schema_version: str = "{VERSION_PLACEHOLDER}"
 
 
