@@ -5,8 +5,8 @@
 [![Anaconda-Server Badge](https://anaconda.org/conda-forge/scitiff/badges/version.svg)](https://anaconda.org/conda-forge/scitiff)
 ![Conda Platform](https://img.shields.io/conda/p/conda-forge/scitiff?label=conda-forge)
 
-[![scitiff](https://github.com/ess-dmsc-dram/scitiff/actions/workflows/nightly_at_main.yml/badge.svg?branch=main)](https://github.com/ess-dmsc-dram/scitiff/actions/workflows/nightly_at_main.yml)
-[![scitiff](https://github.com/ess-dmsc-dram/scitiff/actions/workflows/nightly_at_release.yml/badge.svg?branch=main)](https://github.com/ess-dmsc-dram/scitiff/actions/workflows/nightly_at_release.yml)
+[![scitiff](https://github.com/scipp/scitiff/actions/workflows/nightly_at_main.yml/badge.svg?branch=main)](https://github.com/scipp/scitiff/actions/workflows/nightly_at_main.yml)
+[![scitiff](https://github.com/scipp/scitiff/actions/workflows/nightly_at_release.yml/badge.svg?branch=main)](https://github.com/scipp/scitiff/actions/workflows/nightly_at_release.yml)
 
 # SciTiff
 
