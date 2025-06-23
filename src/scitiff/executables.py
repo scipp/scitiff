@@ -49,7 +49,7 @@ def _build_dummy_metadata() -> SciTiffMetadataContainer:
     return SciTiffMetadataContainer(
         scitiffmeta=SciTiffMetadata(
             image=image_meta,
-            daq=DAQMetadata(instrument='ess'),
+            daq=DAQMetadata(facility='ess', instrument='odin'),
             schema_version=__version__,
         )
     )

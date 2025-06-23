@@ -87,8 +87,8 @@ class ScippDataArray(ScippDataArrayMetadata):
 
 
 class DAQMetadata(BaseModel):
+    facility: str = Field(default="Unknown", description="Facility name")
     instrument: str = Field(default="Unknown", description="Instrument name")
-    """Instrument name."""
 
 
 class SciTiffMetadata(BaseModel):

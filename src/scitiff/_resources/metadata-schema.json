@@ -3,6 +3,12 @@
   "$defs": {
     "DAQMetadata": {
       "properties": {
+        "facility": {
+          "default": "Unknown",
+          "description": "Facility name",
+          "title": "Facility",
+          "type": "string"
+        },
         "instrument": {
           "default": "Unknown",
           "description": "Instrument name",
