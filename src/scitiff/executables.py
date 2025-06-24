@@ -1,5 +1,8 @@
 # SPDX-License-Identifier: BSD-3-Clause
 # Copyright (c) 2025 Ess-dmsc-dram contributors (https://github.com/ess-dmsc-dram)
+import pathlib
+
+import tifffile as tf
 from pydantic import BaseModel
 
 from . import __version__
@@ -76,3 +79,116 @@ def dump_metadata_example():
 
     metadata = _build_dummy_metadata()
     file_path.write_text(dump_beautified_json(metadata))
+
+
+def load_metadata(file_path: pathlib.Path) -> dict | None:
+    import json
+
+    with tf.TiffFile(file_path) as tif:
+        if tif.imagej_metadata is None:
+            return None
+        else:
+            return {
+                key: json.loads(value)
+                if isinstance(value, str) and value.startswith('{')
+                else value
+                for key, value in tif.imagej_metadata.items()
+            }
+
+
+class _DotDotDot:
+    """
+    Placeholder for shortened values in metadata.
+    """
+
+    def __repr__(self):
+        return "..."
+
+
+def shorten_values(meta: dict) -> dict:
+    """
+    Shorten values in the metadata dictionary.
+    """
+
+    return {
+        k: [v[0], _DotDotDot(), v[-1]]  # Show first and last value
+        if (isinstance(v, list) and len(v) > 2 and k == 'values')
+        else (shorten_values(v) if isinstance(v, dict) else v)
+        for k, v in meta.items()
+    }
+
+
+def show_metadata(
+    file_path: pathlib.Path | str,
+    *,
+    max_depth: int | None = 4,
+    only_scitiff: bool = True,
+):
+    """
+    Show all (ImageJ) metadata of a tiff file in a jupyter notebook.
+
+    Parameters
+    ----------
+    file_path:
+        Path to the tiff file to read metadata from.
+    max_depth:
+        Maximum depth of nested metadata to display.
+        Set to `None` to show all metadata.
+
+    """
+    from rich.pretty import Pretty
+
+    if (meta := load_metadata(pathlib.Path(file_path))) is None:
+        return Pretty(f"{file_path} does not contain metadata.")
+    elif only_scitiff:
+        scitiff_meta_keys = SciTiffMetadataContainer.model_fields.keys()
+        meta = {k: v for k, v in meta.items() if k in scitiff_meta_keys}
+    else:
+        ...
+
+    return Pretty(shorten_values(meta), max_depth=max_depth)
+
+
+def print_metadata():
+    """
+    Show all (ImageJ) metadata of a tiff file in a console.
+    """
+    import argparse
+    import pathlib
+
+    from rich.pretty import pprint
+
+    parser = argparse.ArgumentParser(
+        description="Quickly show metadata of a tiff file."
+    )
+    parser.add_argument(
+        type=str,
+        default="scitiff_metadata_example.json",
+        dest="file_name",
+        help="Output file name.",
+    )
+    parser.add_argument(
+        "--max-depth",
+        type=int,
+        default=4,
+        help="Maximum depth of nested metadata to display.",
+    )
+    parser.add_argument(
+        "--only-scitiff",
+        action="store_true",
+        help="Only show SCITIFF metadata.",
+        default=True,
+    )
+
+    args = parser.parse_args()
+    file_path = pathlib.Path(args.file_name)
+
+    meta = load_metadata(file_path)
+    if meta is None:
+        pprint(f"{file_path} does not contain metadata.")
+    else:
+        if args.only_scitiff:
+            scitiff_meta_keys = SciTiffMetadataContainer.model_fields.keys()
+            meta = {k: v for k, v in meta.items() if k in scitiff_meta_keys}
+
+        pprint(shorten_values(meta), max_depth=args.max_depth)

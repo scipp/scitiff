@@ -16,6 +16,7 @@ from ._schema import (
     SciTiffMetadata,
     SciTiffMetadataContainer,
 )
+from .executables import show_metadata
 from .io import (
     concat_mask_as_channels,
     concat_stdevs_and_mask_as_channels,
