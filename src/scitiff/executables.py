@@ -136,7 +136,10 @@ def show_metadata(
         Set to `None` to show all metadata.
 
     """
-    from rich.pretty import Pretty
+    try:
+        from rich.pretty import Pretty
+    except ImportError as e:
+        raise ImportError("Please install python package 'rich'.") from e
 
     if (meta := load_metadata(pathlib.Path(file_path))) is None:
         return Pretty(f"{file_path} does not contain metadata.")
@@ -156,7 +159,12 @@ def print_metadata():
     import argparse
     import pathlib
 
-    from rich.pretty import pprint
+    try:
+        from rich.pretty import pprint
+    except ImportError as e:
+        raise ImportError(
+            "Please install python package 'rich' to use this command."
+        ) from e
 
     parser = argparse.ArgumentParser(
         description="Quickly show metadata of a tiff file."
