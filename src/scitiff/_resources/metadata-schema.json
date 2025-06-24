@@ -14,6 +14,12 @@
           "description": "Instrument name",
           "title": "Instrument",
           "type": "string"
+        },
+        "detector_type": {
+          "default": "Unknown",
+          "description": "Detector type",
+          "title": "Detector Type",
+          "type": "string"
         }
       },
       "title": "DAQMetadata",
