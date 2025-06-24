@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 # Copyright (c) 2025 Ess-dmsc-dram contributors (https://github.com/ess-dmsc-dram)
 
-from typing import Literal
+from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
@@ -97,6 +97,10 @@ class SciTiffMetadata(BaseModel):
 
     image: ImageDataArrayMetadata
     daq: DAQMetadata = Field(default_factory=DAQMetadata)
+    extra: dict[str, Any] | None = Field(
+        default=None,
+        description="Additional metadata that is not part of the schema.",
+    )
     schema_version: str = "{VERSION_PLACEHOLDER}"
 
 

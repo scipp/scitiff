@@ -81,6 +81,12 @@
       "properties": {
         "image": {"$ref": "#/$defs/ImageDataArrayMetadata"},
         "daq": {"$ref": "#/$defs/DAQMetadata"},
+        "extra": {
+          "anyOf": [{ "type": "object" }, { "type": "null" }],
+          "default": null,
+          "description": "Additional metadata that is not part of the schema.",
+          "title": "Extra"
+        },
         "schema_version": {
           "default": "{VERSION_PLACEHOLDER}",
           "title": "Schema Version",
