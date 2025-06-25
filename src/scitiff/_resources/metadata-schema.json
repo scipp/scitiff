@@ -20,9 +20,32 @@
           "description": "Detector type",
           "title": "Detector Type",
           "type": "string"
+        },
+        "probe_type": {
+          "anyOf": [{ "type": "string" }, { "$ref": "#/$defs/ProbeType" }],
+          "default": "Unknown",
+          "description": "Type of probe. i.e. neutron, x-ray, etc.",
+          "title": "Probe Type"
+        },
+        "source": {
+          "anyOf": [{ "$ref": "#/$defs/NeutronProbeMetadata" }, { "$ref": "#/$defs/XRayProbeMetadata" }, { "$ref": "#/$defs/ElectronProbeMetadata" }, { "type": "null" }],
+          "default": null,
+          "description": "Source metadata.",
+          "title": "Source"
+        },
+        "simulated": {
+          "anyOf": [{ "type": "boolean" }, { "type": "null" }],
+          "default": null,
+          "description": "Flag indicating if the data is simulated.",
+          "title": "Simulated"
         }
       },
       "title": "DAQMetadata",
+      "type": "object"
+    },
+    "ElectronProbeMetadata": {
+      "properties": {},
+      "title": "ElectronProbeMetadata",
       "type": "object"
     },
     "ImageDataArrayMetadata": {
@@ -76,6 +99,26 @@
       "title": "ImageVariableMetadata",
       "type": "object"
     },
+    "NeutronProbeMetadata": {
+      "properties": {
+        "neutron_type": {"$ref": "#/$defs/NeutronProbeType"},
+        "wavelength_range": {"$ref": "#/$defs/ScippVariable"}
+      },
+      "required": ["neutron_type", "wavelength_range"],
+      "title": "NeutronProbeMetadata",
+      "type": "object"
+    },
+    "NeutronProbeType": {
+      "enum": ["continuous", "long-pulse", "short-pulse"],
+      "title": "NeutronProbeType",
+      "type": "string"
+    },
+    "ProbeType": {
+      "description": "Enum for probe types.",
+      "enum": ["neutron", "x-ray", "electron"],
+      "title": "ProbeType",
+      "type": "string"
+    },
     "SciTiffMetadata": {
       "description": "SCITIFF Metadata.",
       "properties": {
@@ -122,6 +165,11 @@
       },
       "required": ["dims", "shape", "unit", "dtype", "values"],
       "title": "ScippVariable",
+      "type": "object"
+    },
+    "XRayProbeMetadata": {
+      "properties": {},
+      "title": "XRayProbeMetadata",
       "type": "object"
     }
   },

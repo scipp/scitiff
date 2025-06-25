@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 # Copyright (c) 2025 Ess-dmsc-dram contributors (https://github.com/ess-dmsc-dram)
 
+from enum import Enum
 from typing import Any, Literal
 
 from pydantic import BaseModel, Field
@@ -86,10 +87,46 @@ class ScippDataArray(ScippDataArrayMetadata):
     data: ScippVariable
 
 
+class ProbeType(Enum):
+    """Enum for probe types."""
+
+    NEUTRON = "neutron"
+    X_RAY = "x-ray"
+    ELECTRON = "electron"
+
+
+class NeutronProbeType(Enum):
+    CONTINUOUS = "continuous"
+    LONG_PULSE = "long-pulse"
+    SHORT_PULSE = "short-pulse"
+
+
+class NeutronProbeMetadata(BaseModel):
+    neutron_type: NeutronProbeType
+    wavelength_range: ScippVariable
+
+
+class XRayProbeMetadata(BaseModel): ...
+
+
+class ElectronProbeMetadata(BaseModel): ...
+
+
+SourceMetaType = NeutronProbeMetadata | XRayProbeMetadata | ElectronProbeMetadata | None
+
+
 class DAQMetadata(BaseModel):
     facility: str = Field(default="Unknown", description="Facility name")
     instrument: str = Field(default="Unknown", description="Instrument name")
     detector_type: str = Field(default="Unknown", description="Detector type")
+    probe_type: str | ProbeType = Field(
+        default="Unknown",
+        description="Type of probe. i.e. neutron, x-ray, etc.",
+    )
+    source: SourceMetaType = Field(default=None, description="Source metadata.")
+    simulated: bool | None = Field(
+        default=None, description="Flag indicating if the data is simulated."
+    )
 
 
 class SciTiffMetadata(BaseModel):
