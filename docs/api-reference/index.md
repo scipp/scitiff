@@ -24,6 +24,7 @@
 
    save_scitiff
    load_scitiff
+   show_metadata
    to_scitiff_image
    validate_scitiff_metadata_container
    concat_mask_as_channels

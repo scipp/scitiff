@@ -10,3 +10,4 @@ sphinx-copybutton
 sphinx-design
 plopp
 autodoc_pydantic
+rich
