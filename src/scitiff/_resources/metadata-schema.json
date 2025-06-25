@@ -28,7 +28,7 @@
           "title": "Source Type"
         },
         "source": {
-          "anyOf": [{ "$ref": "#/$defs/NeutronProbeMetadata" }, { "$ref": "#/$defs/XRayProbeMetadata" }, { "$ref": "#/$defs/ElectronProbeMetadata" }, { "type": "null" }],
+          "anyOf": [{ "$ref": "#/$defs/NeutronMetadata" }, { "$ref": "#/$defs/XRayMetadata" }, { "$ref": "#/$defs/ElectronMetadata" }, { "type": "null" }],
           "default": null,
           "description": "Source metadata.",
           "title": "Source"
@@ -43,9 +43,9 @@
       "title": "DAQMetadata",
       "type": "object"
     },
-    "ElectronProbeMetadata": {
+    "ElectronMetadata": {
       "properties": {},
-      "title": "ElectronProbeMetadata",
+      "title": "ElectronMetadata",
       "type": "object"
     },
     "ImageDataArrayMetadata": {
@@ -99,18 +99,18 @@
       "title": "ImageVariableMetadata",
       "type": "object"
     },
-    "NeutronProbeMetadata": {
+    "NeutronMetadata": {
       "properties": {
-        "neutron_type": {"$ref": "#/$defs/NeutronProbeType"},
+        "neutron_type": {"$ref": "#/$defs/NeutronSourceType"},
         "wavelength_range": {"$ref": "#/$defs/ScippVariable"}
       },
       "required": ["neutron_type", "wavelength_range"],
-      "title": "NeutronProbeMetadata",
+      "title": "NeutronMetadata",
       "type": "object"
     },
-    "NeutronProbeType": {
+    "NeutronSourceType": {
       "enum": ["continuous", "long-pulse", "short-pulse"],
-      "title": "NeutronProbeType",
+      "title": "NeutronSourceType",
       "type": "string"
     },
     "SciTiffMetadata": {
@@ -167,9 +167,9 @@
       "title": "SourceType",
       "type": "string"
     },
-    "XRayProbeMetadata": {
+    "XRayMetadata": {
       "properties": {},
-      "title": "XRayProbeMetadata",
+      "title": "XRayMetadata",
       "type": "object"
     }
   },

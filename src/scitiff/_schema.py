@@ -95,24 +95,24 @@ class SourceType(Enum):
     ELECTRON = "electron"
 
 
-class NeutronProbeType(Enum):
+class NeutronSourceType(Enum):
     CONTINUOUS = "continuous"
     LONG_PULSE = "long-pulse"
     SHORT_PULSE = "short-pulse"
 
 
-class NeutronProbeMetadata(BaseModel):
-    neutron_type: NeutronProbeType
+class NeutronMetadata(BaseModel):
+    neutron_type: NeutronSourceType
     wavelength_range: ScippVariable
 
 
-class XRayProbeMetadata(BaseModel): ...
+class XRayMetadata(BaseModel): ...
 
 
-class ElectronProbeMetadata(BaseModel): ...
+class ElectronMetadata(BaseModel): ...
 
 
-SourceMetaType = NeutronProbeMetadata | XRayProbeMetadata | ElectronProbeMetadata | None
+SourceMetaType = NeutronMetadata | XRayMetadata | ElectronMetadata | None
 
 
 class DAQMetadata(BaseModel):
