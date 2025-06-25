@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 # Copyright (c) 2025 Ess-dmsc-dram contributors (https://github.com/ess-dmsc-dram)
 import pathlib
+from typing import TypeVar
 
 import tifffile as tf
 from pydantic import BaseModel
@@ -105,17 +106,24 @@ class _DotDotDot:
         return "..."
 
 
+_VT = TypeVar('_VT')
+
+
+def _shorten_value(key: str, value: _VT | list) -> _VT | list:
+    if isinstance(value, list) and len(value) > 2 and key == 'values':
+        return [value[0], _DotDotDot(), value[-1]]  # Show first and last value
+    elif isinstance(value, dict):
+        return shorten_values(value)
+    else:
+        return value
+
+
 def shorten_values(meta: dict) -> dict:
     """
     Shorten values in the metadata dictionary.
     """
 
-    return {
-        k: [v[0], _DotDotDot(), v[-1]]  # Show first and last value
-        if (isinstance(v, list) and len(v) > 2 and k == 'values')
-        else (shorten_values(v) if isinstance(v, dict) else v)
-        for k, v in meta.items()
-    }
+    return {key: _shorten_value(key, value) for key, value in meta.items()}
 
 
 def show_metadata(
@@ -148,7 +156,7 @@ def show_metadata(
         return Pretty(f"{file_path} does not contain metadata.")
     elif not show_all:
         scitiff_meta_keys = SciTiffMetadataContainer.model_fields.keys()
-        meta = {k: v for k, v in meta.items() if k in scitiff_meta_keys}
+        meta = {key: value for key, value in meta.items() if key in scitiff_meta_keys}
     else:
         ...
 
@@ -200,6 +208,8 @@ def print_metadata():
     else:
         if not args.show_all:
             scitiff_meta_keys = SciTiffMetadataContainer.model_fields.keys()
-            meta = {k: v for k, v in meta.items() if k in scitiff_meta_keys}
+            meta = {
+                key: value for key, value in meta.items() if key in scitiff_meta_keys
+            }
 
         pprint(shorten_values(meta), max_depth=args.max_depth)
