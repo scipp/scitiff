@@ -122,7 +122,7 @@ def show_metadata(
     file_path: pathlib.Path | str,
     *,
     max_depth: int | None = 4,
-    only_scitiff: bool = True,
+    show_all: bool = False,
 ):
     """
     Show all (ImageJ) metadata of a tiff file in a jupyter notebook.
@@ -134,6 +134,9 @@ def show_metadata(
     max_depth:
         Maximum depth of nested metadata to display.
         Set to `None` to show all metadata.
+    show_all:
+        If `True`, show all ImageJ metadata, not just SCITIFF metadata.
+        If `False`, only show SCITIFF metadata.
 
     """
     try:
@@ -143,7 +146,7 @@ def show_metadata(
 
     if (meta := load_metadata(pathlib.Path(file_path))) is None:
         return Pretty(f"{file_path} does not contain metadata.")
-    elif only_scitiff:
+    elif not show_all:
         scitiff_meta_keys = SciTiffMetadataContainer.model_fields.keys()
         meta = {k: v for k, v in meta.items() if k in scitiff_meta_keys}
     else:
@@ -182,10 +185,10 @@ def print_metadata():
         help="Maximum depth of nested metadata to display.",
     )
     parser.add_argument(
-        "--only-scitiff",
+        "--show-all",
         action="store_true",
-        help="Only show SCITIFF metadata.",
-        default=True,
+        help="Show all ImageJ metadata, not just SCITIFF metadata.",
+        default=False,
     )
 
     args = parser.parse_args()
@@ -195,7 +198,7 @@ def print_metadata():
     if meta is None:
         pprint(f"{file_path} does not contain metadata.")
     else:
-        if args.only_scitiff:
+        if not args.show_all:
             scitiff_meta_keys = SciTiffMetadataContainer.model_fields.keys()
             meta = {k: v for k, v in meta.items() if k in scitiff_meta_keys}
 
