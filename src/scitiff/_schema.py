@@ -1,7 +1,8 @@
 # SPDX-License-Identifier: BSD-3-Clause
 # Copyright (c) 2025 Ess-dmsc-dram contributors (https://github.com/ess-dmsc-dram)
 
-from typing import Literal
+from enum import Enum
+from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
@@ -86,10 +87,57 @@ class ScippDataArray(ScippDataArrayMetadata):
     data: ScippVariable
 
 
+class SourceType(Enum):
+    """Enum for probe types."""
+
+    NEUTRON = "neutron"
+    X_RAY = "x-ray"
+    ELECTRON = "electron"
+
+
+class NeutronSourceType(Enum):
+    CONTINUOUS = "continuous"
+    LONG_PULSE = "long-pulse"
+    SHORT_PULSE = "short-pulse"
+
+
+class NeutronMetadata(BaseModel):
+    neutron_type: NeutronSourceType
+    wavelength_range: ScippVariable
+
+
+class XRayMetadata(BaseModel): ...
+
+
+class ElectronMetadata(BaseModel): ...
+
+
+SourceMetaType = NeutronMetadata | XRayMetadata | ElectronMetadata | None
+
+
+class DAQMetadata(BaseModel):
+    facility: str = Field(default="Unknown", description="Facility name")
+    instrument: str = Field(default="Unknown", description="Instrument name")
+    detector_type: str = Field(default="Unknown", description="Detector type")
+    source_type: str | SourceType = Field(
+        default="Unknown",
+        description="Type of source(probe). i.e. neutron, x-ray, etc.",
+    )
+    source: SourceMetaType = Field(default=None, description="Source metadata.")
+    simulated: bool | None = Field(
+        default=None, description="Flag indicating if the data is simulated."
+    )
+
+
 class SciTiffMetadata(BaseModel):
     """SCITIFF Metadata."""
 
     image: ImageDataArrayMetadata
+    daq: DAQMetadata = Field(default_factory=DAQMetadata)
+    extra: dict[str, Any] | None = Field(
+        default=None,
+        description="Additional metadata that is not part of the schema.",
+    )
     schema_version: str = "{VERSION_PLACEHOLDER}"
 
 
