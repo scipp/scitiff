@@ -150,7 +150,12 @@ def show_metadata(
     try:
         from rich.pretty import Pretty
     except ImportError as e:
-        raise ImportError("Please install python package 'rich'.") from e
+        raise ImportError(
+            "You need `rich` to run this function.\n"
+            "Please install `rich` or `scitiff` with `GUI` "
+            "optional dependencies.\n"
+            "Recommended command: pip install scitiff[gui]."
+        ) from e
 
     if (meta := load_metadata(pathlib.Path(file_path))) is None:
         return Pretty(f"{file_path} does not contain metadata.")
@@ -174,7 +179,10 @@ def print_metadata():
         from rich.pretty import pprint
     except ImportError as e:
         raise ImportError(
-            "Please install python package 'rich' to use this command."
+            "You need `rich` to run this command.\n"
+            "Please install `rich` or `scitiff` with `GUI` "
+            "optional dependencies.\n"
+            "Recommended command: pip install scitiff[gui]."
         ) from e
 
     parser = argparse.ArgumentParser(
