@@ -87,7 +87,7 @@ class ScippDataArray(ScippDataArrayMetadata):
     data: ScippVariable
 
 
-class ProbeType(Enum):
+class SourceType(Enum):
     """Enum for probe types."""
 
     NEUTRON = "neutron"
@@ -119,9 +119,9 @@ class DAQMetadata(BaseModel):
     facility: str = Field(default="Unknown", description="Facility name")
     instrument: str = Field(default="Unknown", description="Instrument name")
     detector_type: str = Field(default="Unknown", description="Detector type")
-    probe_type: str | ProbeType = Field(
+    source_type: str | SourceType = Field(
         default="Unknown",
-        description="Type of probe. i.e. neutron, x-ray, etc.",
+        description="Type of source(probe). i.e. neutron, x-ray, etc.",
     )
     source: SourceMetaType = Field(default=None, description="Source metadata.")
     simulated: bool | None = Field(

@@ -21,11 +21,11 @@
           "title": "Detector Type",
           "type": "string"
         },
-        "probe_type": {
-          "anyOf": [{ "type": "string" }, { "$ref": "#/$defs/ProbeType" }],
+        "source_type": {
+          "anyOf": [{ "type": "string" }, { "$ref": "#/$defs/SourceType" }],
           "default": "Unknown",
-          "description": "Type of probe. i.e. neutron, x-ray, etc.",
-          "title": "Probe Type"
+          "description": "Type of source(probe). i.e. neutron, x-ray, etc.",
+          "title": "Source Type"
         },
         "source": {
           "anyOf": [{ "$ref": "#/$defs/NeutronProbeMetadata" }, { "$ref": "#/$defs/XRayProbeMetadata" }, { "$ref": "#/$defs/ElectronProbeMetadata" }, { "type": "null" }],
@@ -113,12 +113,6 @@
       "title": "NeutronProbeType",
       "type": "string"
     },
-    "ProbeType": {
-      "description": "Enum for probe types.",
-      "enum": ["neutron", "x-ray", "electron"],
-      "title": "ProbeType",
-      "type": "string"
-    },
     "SciTiffMetadata": {
       "description": "SCITIFF Metadata.",
       "properties": {
@@ -166,6 +160,12 @@
       "required": ["dims", "shape", "unit", "dtype", "values"],
       "title": "ScippVariable",
       "type": "object"
+    },
+    "SourceType": {
+      "description": "Enum for probe types.",
+      "enum": ["neutron", "x-ray", "electron"],
+      "title": "SourceType",
+      "type": "string"
     },
     "XRayProbeMetadata": {
       "properties": {},
