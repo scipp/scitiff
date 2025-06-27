@@ -2,8 +2,6 @@
 # Copyright (c) 2025 Ess-dmsc-dram contributors (https://github.com/ess-dmsc-dram)
 import json
 import pathlib
-from collections.abc import Generator
-from contextlib import contextmanager
 
 import numpy as np
 import pytest
@@ -137,11 +135,10 @@ def test_load_scipp_incompatible_dtype_fallback(
         match=f"dtype of ``{dtype}``. "
         f"The dtype will be converted to ``<class 'numpy.{expected_dtype}'>``",
     ):
-        loaded_image = load_scitiff(tmp_file_path)['image']
-        assert loaded_image.dims == tuple(
-            f"dim_{i}" for i in range(3)
-        )  # Image is squeezed
-        assert loaded_image.dtype == expected_dtype
+        loaded_image = load_scitiff(tmp_file_path, resolve_channels=False)['image']
+
+    assert loaded_image.dims == tuple(f"dim_{i}" for i in range(3))  # Image is squeezed
+    assert loaded_image.dtype == expected_dtype
 
 
 @pytest.mark.parametrize(
@@ -164,10 +161,8 @@ def test_load_imagej_scipp_incompatible_dtype_fallback(
         ):  # These dtypes are not supported by tifffile with `imagej=True`
             loaded_image = load_scitiff(tmp_file_path)['image']
 
-        assert loaded_image.dims == tuple(
-            f"dim_{i}" for i in range(3)
-        )  # Image is squeezed
-        assert loaded_image.dtype == expected_dtype
+    assert loaded_image.dims == tuple(f"dim_{i}" for i in range(3))  # Image is squeezed
+    assert loaded_image.dtype == expected_dtype
 
 
 @pytest.mark.parametrize(('dtype', 'expected_dtype'), [('float64', 'float64')])
@@ -214,9 +209,8 @@ def test_load_incompatible_metadata_warns(sample_image: sc.DataArray, tmp_path) 
         match="Size of the image data does not match with the metadata.",
     ):
         loaded_image = load_scitiff(tmp_file_path)['image']
-        assert loaded_image.dims == tuple(
-            f"dim_{i}" for i in range(2)
-        )  # Image is squeezed
+
+    assert loaded_image.dims == tuple(f"dim_{i}" for i in range(2))  # Image is squeezed
 
 
 def test_load_without_metadata_warns(tmp_path) -> None:
@@ -228,8 +222,9 @@ def test_load_without_metadata_warns(tmp_path) -> None:
         ImageJMetadataNotFoundWarning, match='ImageJ metadata not found.'
     ):
         loaded_image: sc.DataArray = load_scitiff(no_metadata_file_path)['image']
-        assert loaded_image.dims == tuple(f"dim_{i}" for i in range(2))
-        assert np.all(loaded_image.values == np.array([[1.0, 2], [3, 4]]))
+
+    assert loaded_image.dims == tuple(f"dim_{i}" for i in range(2))
+    assert np.all(loaded_image.values == np.array([[1.0, 2], [3, 4]]))
 
 
 def test_load_broken_metadata_warns(tmp_path) -> None:
@@ -242,25 +237,14 @@ def test_load_broken_metadata_warns(tmp_path) -> None:
     )
     with pytest.warns(ScitiffMetadataWarning, match='Scitiff metadata is broken.'):
         loaded_image: sc.DataArray = load_scitiff(no_metadata_file_path)['image']
-        assert loaded_image.dims == tuple(f"dim_{i}" for i in range(2))
-        assert np.all(loaded_image.values == arbitrary_image)
 
-
-@contextmanager
-def multichannel_functionality_warning() -> Generator:
-    with pytest.warns(
-        FutureWarning,
-        match='Multi-channel images interpreted as '
-        '`intensities`, `stdevs` and `mask` '
-        'is not yet officially supported by ``Scitiff`` schema.',
-    ):
-        yield
+    assert loaded_image.dims == tuple(f"dim_{i}" for i in range(2))
+    assert np.all(loaded_image.values == arbitrary_image)
 
 
 def test_to_scitiff_image_with_variances(sample_image: sc.DataArray) -> None:
     sample_image.variances = (sample_image**2).values
-    with multichannel_functionality_warning():
-        final_image = to_scitiff_image(sample_image, concat_stdevs_and_mask=True)
+    final_image = to_scitiff_image(sample_image, concat_stdevs_and_mask=True)
 
     assert final_image.dims == SCITIFF_IMAGE_STACK_DIMENSIONS
     expected_coord = sc.array(
@@ -287,10 +271,9 @@ def test_to_scitiff_image_with_mask(
     mask.unit = None  # Mask should not have a unit
     sample_image.masks['mask'] = mask
 
-    with multichannel_functionality_warning():
-        final_image = to_scitiff_image(
-            sample_image, concat_stdevs_and_mask=True, mask_name=mask_name
-        )
+    final_image = to_scitiff_image(
+        sample_image, concat_stdevs_and_mask=True, mask_name=mask_name
+    )
 
     assert final_image.dims == SCITIFF_IMAGE_STACK_DIMENSIONS
     expected_coord = sc.array(
@@ -318,10 +301,9 @@ def test_to_scitiff_image_variances_and_mask(
     sample_image.masks['mask'] = mask
     sample_image.variances = (sample_image**2).values
 
-    with multichannel_functionality_warning():
-        final_image = to_scitiff_image(
-            sample_image, concat_stdevs_and_mask=True, mask_name=mask_name
-        )
+    final_image = to_scitiff_image(
+        sample_image, concat_stdevs_and_mask=True, mask_name=mask_name
+    )
 
     assert final_image.dims == SCITIFF_IMAGE_STACK_DIMENSIONS
     expected_coord = sc.array(
@@ -348,8 +330,7 @@ def test_concat_scitiff_channels_intensities_variances(
     sample_image: sc.DataArray,
 ) -> None:
     sample_image.variances = (sample_image**2).values
-    with multichannel_functionality_warning():
-        two_channel_image = concat_stdevs_as_channels(sample_image)
+    two_channel_image = concat_stdevs_as_channels(sample_image)
 
     assert_identical(
         two_channel_image.coords['c'],
@@ -381,8 +362,7 @@ def test_concat_scitiff_channels_intensities_mask(
     mask['t', 0]['y', 1]['x', 2] = True
     sample_image.masks['mask'] = mask
 
-    with multichannel_functionality_warning():
-        two_channel_image = concat_mask_as_channels(sample_image, mask_name=mask_name)
+    two_channel_image = concat_mask_as_channels(sample_image, mask_name=mask_name)
 
     assert_identical(
         two_channel_image.coords['c'],
@@ -430,10 +410,9 @@ def test_concat_scitiff_channels_intensities_variances_masks(
     sample_image.masks['mask'] = mask
     sample_image.variances = (sample_image**2).values
 
-    with multichannel_functionality_warning():
-        three_channel_image = concat_stdevs_and_mask_as_channels(
-            sample_image, mask_name=mask_name
-        )
+    three_channel_image = concat_stdevs_and_mask_as_channels(
+        sample_image, mask_name=mask_name
+    )
     expected_coord = sc.array(
         dims=['c'],
         values=[Channel.intensities.value, Channel.stdevs.value, Channel.mask.value],
@@ -461,10 +440,9 @@ def test_concat_scitiff_channels_intensities_variances_only_mask(
     mask['t', 0]['y', 1]['x', 2] = True
     sample_image.masks['mask'] = mask
 
-    with multichannel_functionality_warning():
-        two_channel_image = concat_stdevs_and_mask_as_channels(
-            sample_image, mask_name=mask_name
-        )
+    two_channel_image = concat_stdevs_and_mask_as_channels(
+        sample_image, mask_name=mask_name
+    )
     expected_coord = sc.array(
         dims=['c'],
         values=[Channel.intensities.value, Channel.mask.value],
@@ -485,8 +463,7 @@ def test_concat_scitiff_channels_intensities_variances_masks_only_variances(
 ) -> None:
     sample_image.variances = (sample_image**2).values
 
-    with multichannel_functionality_warning():
-        two_channel_image = concat_stdevs_and_mask_as_channels(sample_image)
+    two_channel_image = concat_stdevs_and_mask_as_channels(sample_image)
 
     expected_coord = sc.array(
         dims=['c'],
@@ -506,9 +483,7 @@ def test_concat_scitiff_channels_intensities_variances_masks_only_variances(
 def test_concat_scitiff_channels_intensities_variances_masks_nothing(
     sample_image: sc.DataArray,
 ) -> None:
-    with multichannel_functionality_warning():
-        just_image = concat_stdevs_and_mask_as_channels(sample_image)
-
+    just_image = concat_stdevs_and_mask_as_channels(sample_image)
     expected_coord = sc.array(dims=['c'], values=[Channel.intensities.value])
     assert_identical(just_image.coords['c'], expected_coord)
     assert_identical(
@@ -525,8 +500,7 @@ def test_resolve_scitiff_channels_intensities_variances(
     two_channel_image.coords['c'] = sc.array(
         dims=['c'], values=[Channel.intensities.value, Channel.stdevs.value]
     )
-    with multichannel_functionality_warning():
-        resolved_image = resolve_scitiff_channels(two_channel_image)
+    resolved_image = resolve_scitiff_channels(two_channel_image)
     assert resolved_image.dims == ('t', 'y', 'x')
     assert_identical(sample_image.data, sc.values(resolved_image.data))
     assert np.all(resolved_image.variances == (sample_image**2).values)
@@ -543,8 +517,7 @@ def test_resolve_scitiff_channels_intensities_mask(
     two_channel_image.coords['c'] = sc.array(
         dims=['c'], values=[Channel.intensities.value, Channel.mask.value]
     )
-    with multichannel_functionality_warning():
-        resolved_image = resolve_scitiff_channels(two_channel_image)
+    resolved_image = resolve_scitiff_channels(two_channel_image)
     assert resolved_image.dims == ('t', 'y', 'x')
     assert_identical(sample_image.data, sc.values(resolved_image.data))
 
@@ -568,8 +541,7 @@ def test_resolve_scitiff_channels_intensities_variances_mask(
         dims=['c'],
         values=[Channel.stdevs.value, Channel.intensities.value, Channel.mask.value],
     )
-    with multichannel_functionality_warning():
-        resolved_image = resolve_scitiff_channels(three_channel_image)
+    resolved_image = resolve_scitiff_channels(three_channel_image)
     assert resolved_image.dims == ('t', 'y', 'x')
     assert np.all(resolved_image.variances == (sample_image**2).values)
     assert_identical(sample_image.data, sc.values(resolved_image.data))
@@ -595,10 +567,9 @@ def test_resolve_scitiff_channels_intensities_variances_mask_on_datagroup(
         dims=['c'],
         values=[Channel.stdevs.value, Channel.intensities.value, Channel.mask.value],
     )
-    with multichannel_functionality_warning():
-        resolved_image = resolve_scitiff_channels(
-            sc.DataGroup(image=three_channel_image)
-        )['image']
+    resolved_image = resolve_scitiff_channels(sc.DataGroup(image=three_channel_image))[
+        'image'
+    ]
     assert resolved_image.dims == ('t', 'y', 'x')
     assert np.all(resolved_image.variances == (sample_image.data**2).values)
     assert_identical(sample_image.data, sc.values(resolved_image.data))

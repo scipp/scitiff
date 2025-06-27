@@ -4,7 +4,7 @@ import json
 import pathlib
 import warnings
 from enum import Enum
-from typing import Literal, TypeVar, overload
+from typing import TypeVar
 
 import numpy as np
 import pydantic
@@ -116,17 +116,6 @@ def _ensure_hyperstack_sizes_default_order(sizes: dict) -> dict:
     default_sizes = {X_DIM: 1, Y_DIM: 1, Z_DIM: 1, TIME_DIM: 1, CHANNEL_DIM: 1}
     final_sizes = {**default_sizes, **sizes}
     return {key: final_sizes[key] for key in order if key in final_sizes}
-
-
-def _warn_about_multi_channel_images() -> None:
-    warnings.warn(
-        "Multi-channel images interpreted as `intensities`, `stdevs` and `mask` "
-        "is not yet officially supported by ``Scitiff`` schema.\n"
-        "**Please do not use this function for production.**\n"
-        "**It may change in the future.**\n",
-        stacklevel=2,
-        category=FutureWarning,
-    )
 
 
 def _retrieve_mask_and_wrap_as_dataarray(
@@ -289,7 +278,6 @@ def concat_stdevs_as_channels(da: sc.DataArray) -> sc.DataArray:
             "to concatenate **only** when ``variances`` are present."
         )
 
-    _warn_about_multi_channel_images()
     da = _validate_da_and_squeeze_channel(da)
     stdevs = _retrieve_stdevs_and_wrap_as_dataarray(da)
     return _concat_intensities_stdevs_and_mask(
@@ -353,7 +341,6 @@ def concat_mask_as_channels(da: sc.DataArray, mask_name: str | None) -> sc.DataA
             "Use ``scipp.DataArray.assign_masks`` to assign a mask. "
         )
 
-    _warn_about_multi_channel_images()
     return _concat_intensities_stdevs_and_mask(
         da, mask_channel=mask_channel, stdevs_channel=None
     )
@@ -393,7 +380,6 @@ def concat_stdevs_and_mask_as_channels(
         1D masks or remove them before saving the image.
 
     """
-    _warn_about_multi_channel_images()
     da = _validate_da_and_squeeze_channel(da)
 
     # Retrieving mask first to get rid of the mask from the DataArray
@@ -401,32 +387,16 @@ def concat_stdevs_and_mask_as_channels(
     mask_channel = _retrieve_mask_and_wrap_as_dataarray(da, mask_name)
     stdevs = _retrieve_stdevs_and_wrap_as_dataarray(da)
     # Concatenate all one-three channels
+
     return _concat_intensities_stdevs_and_mask(
         da, mask_channel=mask_channel, stdevs_channel=stdevs
     )
 
 
-@overload
 def to_scitiff_image(
     da: sc.DataArray,
     *,
-    concat_stdevs_and_mask: Literal[False],
-) -> sc.DataArray: ...
-
-
-@overload
-def to_scitiff_image(
-    da: sc.DataArray,
-    *,
-    concat_stdevs_and_mask: Literal[True],
-    mask_name: str | None = None,
-) -> sc.DataArray: ...
-
-
-def to_scitiff_image(
-    da: sc.DataArray,
-    *,
-    concat_stdevs_and_mask: bool = False,
+    concat_stdevs_and_mask: bool = True,
     mask_name: str | None = None,
 ) -> sc.DataArray | sc.Dataset:
     """Modify dimnesions and shapes to match the scitiff image schema.
@@ -537,7 +507,7 @@ def save_scitiff(
     dg: sc.DataGroup | sc.DataArray,
     file_path: str | pathlib.Path,
     *,
-    concat_stdevs_and_mask: bool = False,
+    concat_stdevs_and_mask: bool = True,
     mask_name: str | None = None,
 ) -> None:
     """Save an image in scipp data structure to a SCITIFF format including metadata.
@@ -585,8 +555,8 @@ def save_scitiff(
         The path to save the image data.
 
     concat_stdevs_and_mask:
-        If True, ``stdevs`` and a ``mask`` will be concatenated into channel dimension.
-        The default is False.
+        If `True`, ``stdevs`` and a ``mask`` will be concatenated
+        into channel dimension. The default is `True`.
 
     mask_name:
         The name of the mask to be concatenated as a separate channel.
@@ -755,31 +725,22 @@ class Channel(Enum):
 
 def _resolve_channels(da: sc.DataArray) -> sc.DataArray:
     if (
-        da.sizes.get(CHANNEL_DIM, 0) == 0
+        da.sizes.get(CHANNEL_DIM, 0) <= 1
         or CHANNEL_DIM not in da.coords
         or da.coords[CHANNEL_DIM].dim != CHANNEL_DIM
     ):
-        raise ValueError(
-            "There is no coordinate or dimension named 'c' in the DataArray. "
-        )
+        # No need to resolve channels
+        return da
 
     all_channel_names = [name.value for name in Channel]
     c_coord = da.coords[CHANNEL_DIM]
-    if any(v not in all_channel_names for v in c_coord.values):
-        raise ValueError(
-            f"Channel coordinate has unexpected values: {c_coord.values}. "
-            f"Expected values are: {all_channel_names}. Cannot resolve channels. "
-            "Assign the channel coordinate first. "
-            "i.e. da.assign_coords(\n"
-            "c=sc.array(dims=['c'], values=['intensities', 'stdevs'])\n"
-            ")\n"
-            "Or if it is only intensities, use ``sc.squeeze`` instead.\n"
-        )
-    if Channel.intensities.value not in c_coord.values:
-        raise ValueError(
-            "Channel coordinate does not have 'intensities' value. "
-            "At least one channel should be 'intensities'. "
-        )
+    if any(v not in all_channel_names for v in c_coord.values) or (
+        Channel.intensities.value not in c_coord.values
+    ):
+        # If there is no intensities channel, it means we cannot resolve channels
+        # automatically.
+        # Therefore it returns the DataArray as is.
+        return da
     # We have to copy the slice in order to assign mask and stdevs
     intensities = da[CHANNEL_DIM, sc.scalar(Channel.intensities.value)].copy(deep=True)
     # Check if there is stdevs channel and assign it
@@ -818,7 +779,6 @@ def resolve_scitiff_channels(scitiff_image: T) -> T:
         with values of 'intensities', 'stdevs', and 'mask' (see :class:`~.Channel`).
 
     """
-    _warn_about_multi_channel_images()
     if isinstance(scitiff_image, sc.DataGroup):
         return sc.DataGroup(
             image=_resolve_channels(scitiff_image['image']),
@@ -832,7 +792,7 @@ def load_scitiff(
     file_path: str | pathlib.Path,
     *,
     squeeze: bool = True,
-    resolve_channels: bool = False,
+    resolve_channels: bool = True,
 ) -> sc.DataGroup:
     """Load an image in SCITIFF format to a scipp data structure.
 
@@ -849,7 +809,8 @@ def load_scitiff(
         If True, the channel dimension is resolved as intensities, stdevs and mask.
 
         .. warning::
-            This function is not yet officially supported by ``Scitiff`` schema.
+            Channel interpreted as intensities, variances and mask
+            is not yet officially specified by ``Scitiff`` schema.
             It may change in the future.
 
     Returns
@@ -878,33 +839,36 @@ def load_scitiff(
 
     """
     with tf.TiffFile(file_path) as tif:
-        if tif.imagej_metadata is None:
+        imagej_metadata = tif.imagej_metadata
+
+    if imagej_metadata is None:
+        warnings.warn(
+            "ImageJ metadata not found in the tiff file.\n"
+            "Loading the image with arbitrary dimensions...\n",
+            stacklevel=2,
+            category=ImageJMetadataNotFoundWarning,
+        )
+        img = _fall_back_loader(file_path, squeeze=squeeze)
+    else:
+        try:
+            loaded_metadata = {
+                key: json.loads(value)
+                if _is_nested_value(SciTiffMetadataContainer.model_fields, key)
+                else value
+                for key, value in imagej_metadata.items()
+            }
+            container = SciTiffMetadataContainer(**loaded_metadata)
+        except pydantic.ValidationError as e:
             warnings.warn(
-                "ImageJ metadata not found in the tiff file.\n"
-                "Loading the image with arbitrary dimensions...\n",
+                "Scitiff metadata is broken.\n"
+                "Loading the image with arbitrary dimensions...\n"
+                f"{e}",
                 stacklevel=2,
-                category=ImageJMetadataNotFoundWarning,
+                category=ScitiffMetadataWarning,
             )
             img = _fall_back_loader(file_path, squeeze=squeeze)
         else:
             try:
-                loaded_metadata = {
-                    key: json.loads(value)
-                    if _is_nested_value(SciTiffMetadataContainer.model_fields, key)
-                    else value
-                    for key, value in tif.imagej_metadata.items()
-                }
-                container = SciTiffMetadataContainer(**loaded_metadata)
-            except pydantic.ValidationError as e:
-                warnings.warn(
-                    "Scitiff metadata is broken.\n"
-                    "Loading the image with arbitrary dimensions...\n"
-                    f"{e}",
-                    stacklevel=2,
-                    category=ScitiffMetadataWarning,
-                )
-                img = _fall_back_loader(file_path, squeeze=squeeze)
-            else:
                 image_da = _read_image_as_dataarray(
                     container.scitiffmeta.image, file_path
                 )
@@ -912,5 +876,14 @@ def load_scitiff(
                     image_da = image_da.squeeze()
 
                 img = sc.DataGroup(image=image_da)
+            except Exception as e:
+                warnings.warn(
+                    "Failed to reconstruct DataArray from metadata and image stack.\n"
+                    "Loading the image with fall back loader...\n"
+                    f"{e}",
+                    stacklevel=2,
+                    category=RuntimeWarning,
+                )
+                img = _fall_back_loader(file_path, squeeze=squeeze)
 
     return img if not resolve_channels else resolve_scitiff_channels(img)
