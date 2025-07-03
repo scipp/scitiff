@@ -194,6 +194,11 @@ def _concat_intensities_stdevs_and_mask(
     )
 
 
+def _has_variances_or_masks(da: sc.DataArray) -> bool:
+    """Check if the DataArray is multi-channel with variances or masks."""
+    return da.variances is not None or bool(da.masks)
+
+
 def _validate_da_and_squeeze_channel(da: sc.DataArray) -> sc.DataArray:
     """Validate the DataArray and squeeze the channel dimension.
 
@@ -209,7 +214,8 @@ def _validate_da_and_squeeze_channel(da: sc.DataArray) -> sc.DataArray:
 
     """
     # Check if ``da`` has ``c`` dimension already.
-    if (orig_c_size := da.sizes.get(CHANNEL_DIM, 0)) > 1:
+    orig_c_size = da.sizes.get(CHANNEL_DIM, 0)
+    if orig_c_size > 1 and _has_variances_or_masks(da):
         raise NotImplementedError(
             f"DataArray already has c dimension with size {orig_c_size}. "
             "Multiple channel-intensities are not supported yet. "
@@ -222,19 +228,17 @@ def _validate_da_and_squeeze_channel(da: sc.DataArray) -> sc.DataArray:
         da = da.copy(deep=False)
 
     # Check if ``da`` has ``c`` coordinate already, it should be a scalar.
-    match c_coord := da.coords.get(CHANNEL_DIM):
-        case sc.Variable(value=Channel.intensities.value) | None:
-            ...
-        case _:
-            raise ValueError(
-                f"DataArray has unexpected ``c`` coordinate: {c_coord}. "
-                "The ``c`` coordinate should not exist or "
-                "should be a single element array in ``c`` dimension "
-                "with the value of `intensities` as a string. "
-            )
-
+    expected_coord = sc.scalar(Channel.intensities.value)
+    c_coord = da.coords.get(CHANNEL_DIM)
+    if c_coord is not None and sc.all(c_coord != expected_coord).value:
+        raise ValueError(
+            f"DataArray has unexpected ``c`` coordinate: {c_coord}. "
+            "The ``c`` coordinate should not exist or "
+            "should be a single element array in ``c`` dimension "
+            "with the value of `intensities` as a string. "
+        )
     # Assign the channel coordinate to the DataArray
-    da.coords[CHANNEL_DIM] = sc.scalar(value=Channel.intensities.value)
+    da.coords[CHANNEL_DIM] = expected_coord
     return da
 
 
@@ -413,7 +417,11 @@ def to_scitiff_image(
     concat_stdevs_and_mask:
         If True, the function will concatenate
         ``stdevs`` and a ``mask`` to separate channels.
-        The default is False.
+        If not specified, it will default to `True` and try to concatenate
+        unless the DataArray is already multi-channel image and have variances
+        and masks.
+        In that case, it will raise an error as it is not supported yet.
+        In case of the error, set it to `False`.
 
     mask_name:
         The name of the mask to be concatenated as a separate channel.
@@ -448,7 +456,7 @@ def to_scitiff_image(
 
     """
     _validate_dimensions(da)
-    if concat_stdevs_and_mask:
+    if concat_stdevs_and_mask and _has_variances_or_masks(da):
         da = concat_stdevs_and_mask_as_channels(da, mask_name)
     final_sizes = _ensure_hyperstack_sizes_default_order(da.sizes)
     dims = tuple(final_sizes.keys())
@@ -480,7 +488,7 @@ def _save_data_array(
     da: sc.DataArray,
     file_path: str | pathlib.Path,
     *,
-    concat_stdevs_and_mask: bool = False,
+    concat_stdevs_and_mask: bool = True,
     mask_name: str | None = None,
 ) -> None:
     final_image = to_scitiff_image(
