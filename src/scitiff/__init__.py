@@ -11,6 +11,7 @@ except importlib.metadata.PackageNotFoundError:
 
 del importlib
 
+from ._img_processors import values
 from ._schema import (
     SCITIFF_IMAGE_STACK_DIMENSIONS,
     SciTiffMetadata,
