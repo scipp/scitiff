@@ -221,3 +221,18 @@ def print_metadata():
             }
 
         pprint(shorten_values(meta), max_depth=args.max_depth)
+
+
+def values():
+    """
+    Slice channel dimension from image.
+    """
+    import argparse
+
+    from ._img_processors import values  # noqa: F401
+
+    parser = argparse.ArgumentParser(
+        description="Quickly show metadata of a tiff file."
+    )
+    parser.add_argument(type=str, dest="input_file_name", help="Input file name.")
+    parser.add_argument(type=str, dest="output_file_name", help="Output file name.")
