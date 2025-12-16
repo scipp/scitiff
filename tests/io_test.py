@@ -92,7 +92,8 @@ def test_export_multi_dimension_coordinate_raises(
     sample_image_2d_coordinate: sc.DataArray,
 ) -> None:
     with pytest.raises(
-        ValueError, match='Only 1-dimensional variable is allowed for metadata.'
+        ValueError,
+        match=r'Only 1-dimensional or scalar variable is allowed for metadata.',
     ):
         save_scitiff(sample_image_2d_coordinate, 'test.tiff')
 
