@@ -50,13 +50,18 @@ def _wrap_unit(unit: str | None) -> str | None:
 
 
 def _scipp_variable_to_model(var: sc.Variable) -> ScippVariable:
+    # We do not use sc.to_dict directly because
+    # we have to handle serialization of some non-string output
+    # and also we want to utilize the pydantic model for validation.
     if var.ndim > 1:
         raise ValueError(
-            "Only 1-dimensional variable is allowed for metadata. "
+            "Only 1-dimensional or scalar variable is allowed for metadata. "
             "The variable has more than 1 dimension."
         )
-    # string values does not have `tolist` method
-    if hasattr(var, "values") and hasattr(var.values, "tolist"):
+    if var.ndim == 0:  # scalar variable
+        values = var.value
+    elif hasattr(var.values, "tolist"):
+        # string values does not have `tolist` method
         values = var.values.tolist()
     else:
         values = list(var.values)
