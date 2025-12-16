@@ -44,7 +44,9 @@ def hyperstack_example() -> sc.DataArray:
     )
 
 
-def hyperstack_example_with_variances_and_mask() -> sc.DataArray:
+def hyperstack_example_with_variances_and_mask(
+    concatenated_channel: bool = False,
+) -> sc.DataArray:
     """Create a sample image with ImageJ Hyperstack.
 
     The image is not aligned with the ImageJ Hyperstack default dimension order.
@@ -71,4 +73,8 @@ def hyperstack_example_with_variances_and_mask() -> sc.DataArray:
     da.masks['mask'] = mask
     # Add variances
     da.variances = da.values * 0.1
+    if concatenated_channel:
+        from .io import concat_stdevs_and_mask_as_channels
+
+        da = concat_stdevs_and_mask_as_channels(da)
     return da
