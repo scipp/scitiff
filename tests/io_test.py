@@ -2,6 +2,7 @@
 # Copyright (c) 2025 Ess-dmsc-dram contributors (https://github.com/ess-dmsc-dram)
 import json
 import pathlib
+import re
 
 import numpy as np
 import pytest
@@ -93,7 +94,9 @@ def test_export_multi_dimension_coordinate_raises(
 ) -> None:
     with pytest.raises(
         ValueError,
-        match=r'Only 1-dimensional or scalar variable is allowed for metadata.',
+        match=re.escape(
+            'Only 1-dimensional or scalar variable is allowed for metadata.'
+        ),
     ):
         save_scitiff(sample_image_2d_coordinate, 'test.tiff')
 
@@ -397,7 +400,7 @@ def test_concat_scitiff_channels_intensities_mask_too_many_masks_raises(
     sample_image.masks['mask2'] = mask
 
     with pytest.raises(
-        ValueError, match="A mask to be concatenated cannot be determined. "
+        ValueError, match=re.escape("A mask to be concatenated cannot be determined.")
     ):
         concat_mask_as_channels(sample_image, mask_name=None)
 
@@ -408,7 +411,9 @@ def test_concat_scitiff_channels_intensities_mask_not_same_size_raises(
     mask = sc.zeros_like(sample_image.data)['t', 0].astype(bool)
     sample_image.masks['mask'] = mask
 
-    with pytest.raises(ValueError, match="has unexpected size: {'y': 3, 'x': 4}"):
+    with pytest.raises(
+        ValueError, match=re.escape("has unexpected size: {'y': 3, 'x': 4}")
+    ):
         concat_mask_as_channels(sample_image, mask_name='mask')
 
 
