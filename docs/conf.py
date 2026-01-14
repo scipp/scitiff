@@ -34,6 +34,7 @@ extensions = [
     'sphinx_autodoc_typehints',
     'sphinx_copybutton',
     'sphinx_design',
+    'sphinxcontrib.autodoc_pydantic',
     'nbsphinx',
     'myst_parser',
     'sphinxcontrib.autodoc_pydantic',
@@ -178,7 +179,7 @@ html_theme_options = {
         },
         {
             "name": "Conda",
-            "url": "https://anaconda.org/scipp/scitiff",
+            "url": "https://anaconda.org/conda-forge/scitiff",
             "icon": "fa-custom fa-anaconda",
             "type": "fontawesome",
         },
@@ -258,5 +259,6 @@ linkcheck_ignore = [
     r'https?://github\.com/.*?/blob/[a-f0-9]+/.+?#',
     # Linkcheck seems to be denied access by some DOI resolvers.
     # Since DOIs are supposed to be permanent, we don't need to check them.'
-    r'https://doi\.org/',
+    r'https?://doi\.org/',
+    r'https?://dx\.doi\.org/',
 ]

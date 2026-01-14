@@ -1,9 +1,9 @@
 # Changes here will be overwritten by Copier; NEVER EDIT MANUALLY
-_commit: d181e24
+_commit: c89cb2e
 _src_path: gh:scipp/copier_template
 description: Scientific tiff format for imaging experiments.
-max_python: '3.12'
-min_python: '3.10'
+max_python: '3.13'
+min_python: '3.11'
 namespace_package: ''
 nightly_deps: scipp
 orgname: scipp

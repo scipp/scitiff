@@ -7,39 +7,38 @@
 #
 annotated-types==0.7.0
     # via pydantic
-attrs==25.3.0
+attrs==25.4.0
     # via
     #   jsonschema
     #   referencing
-jsonschema==4.24.0
+jsonschema==4.26.0
     # via -r base.in
-jsonschema-specifications==2025.4.1
+jsonschema-specifications==2025.9.1
     # via jsonschema
-numpy==2.2.6
+numpy==2.4.1
     # via
     #   scipp
     #   tifffile
-pydantic==2.11.7
+pydantic==2.12.5
     # via -r base.in
-pydantic-core==2.33.2
+pydantic-core==2.41.5
     # via pydantic
-referencing==0.36.2
+referencing==0.37.0
     # via
     #   jsonschema
     #   jsonschema-specifications
-rpds-py==0.25.1
+rpds-py==0.30.0
     # via
     #   jsonschema
     #   referencing
-scipp==25.5.1
+scipp==25.12.0
     # via -r base.in
-tifffile==2025.5.10
+tifffile==2025.12.20
     # via -r base.in
-typing-extensions==4.14.0
+typing-extensions==4.15.0
     # via
     #   pydantic
     #   pydantic-core
-    #   referencing
     #   typing-inspection
-typing-inspection==0.4.1
+typing-inspection==0.4.2
     # via pydantic
