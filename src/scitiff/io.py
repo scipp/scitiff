@@ -44,7 +44,7 @@ class ScitiffMetadataWarning(Warning):
     """Warning for broken scitiff metadata."""
 
 
-def _from_dict(dict_repr_var: dict) -> sc.Variable:
+def _from_json_dict(dict_repr_var: dict) -> sc.Variable:
     try:
         return from_dict(dict_repr_var)
     except ValueError as err:
@@ -785,11 +785,11 @@ def _read_image_as_dataarray(
     # However, each coordinate and mask is loaded using ``_from_dict`` function
     # since they are serialized as dictionaries.
     coords = {
-        key: _from_dict(value.model_dump())
+        key: _from_json_dict(value.model_dump())
         for key, value in image_metadata.coords.items()
     }
     masks = {
-        key: _from_dict(value.model_dump())
+        key: _from_json_dict(value.model_dump())
         for key, value in image_metadata.masks.items()
     }
     return sc.DataArray(
@@ -882,7 +882,7 @@ def _build_scipp_variable_from_extra_metadata(container: SciTiffMetadataContaine
     scitiff_meta = container.scitiffmeta
     if scitiff_meta.extra is not None:
         new_extra = {
-            _extra_meta_key: _from_dict(_extra_meta_value)
+            _extra_meta_key: _from_json_dict(_extra_meta_value)
             if isinstance(_extra_meta_value, dict)
             else _extra_meta_value
             for _extra_meta_key, _extra_meta_value in scitiff_meta.extra.items()
