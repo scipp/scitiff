@@ -47,19 +47,56 @@ def sample_image() -> sc.DataArray:
     return sample_img
 
 
+@pytest.fixture
+def sample_image_datagroup(sample_image: sc.DataArray) -> sc.DataGroup:
+    return sc.DataGroup(
+        image=sample_image,
+        extra={
+            'writer': 'RapBear',
+            'generation': 1,
+            'year': sc.scalar(2026, unit='year'),
+        },
+    )
+
+
 def test_export_and_load_scitiff(sample_image, tmp_path) -> None:
     tmp_file_path = tmp_path / 'test.tiff'
     save_scitiff(sample_image, tmp_file_path)
+    loaded_image = load_scitiff(tmp_file_path, only_image=True)
+    # exported image already has right order of dimensions
+    assert_identical(sample_image, loaded_image)
+
+
+def test_export_and_load_scitiff_dagagroup_wrong_daqmetadatatype_raises(
+    sample_image_datagroup: sc.DataGroup,
+) -> None:
+    import uuid
+
+    tmp_name = uuid.uuid4().hex + '.tiff'
+    sample_image_datagroup['daq'] = {}
+    with pytest.raises(TypeError, match='DAQMetadata'):
+        save_scitiff(sample_image_datagroup, tmp_name)
+
+    # Should not have written the file.
+    assert not pathlib.Path(tmp_name).exists()
+
+
+def test_export_and_load_scitiff_dagagroup(
+    sample_image_datagroup: sc.DataGroup, tmp_path
+) -> None:
+    tmp_file_path = tmp_path / 'test.tiff'
+    save_scitiff(sample_image_datagroup, tmp_file_path)
     loaded_image = load_scitiff(tmp_file_path)
     # exported image already has right order of dimensions
-    assert sc.identical(sample_image, loaded_image)
+    assert_identical(sample_image_datagroup['image'], loaded_image['image'])
+    assert_identical(sample_image_datagroup['extra'], loaded_image['extra'])
 
 
 def test_export_and_load_scitiff_with_scalar_coord_str(sample_image, tmp_path) -> None:
     sample_image.coords['some-name-key'] = sc.scalar('some-name-value')
     tmp_file_path = tmp_path / 'test_scalar_coord_str.tiff'
     save_scitiff(sample_image, tmp_file_path)
-    loaded_image = load_scitiff(tmp_file_path)
+    loaded_image = load_scitiff(tmp_file_path, only_image=True)
     # exported image already has right order of dimensions
     assert sc.identical(sample_image, loaded_image)
     tmp_file_path.unlink()
@@ -69,7 +106,7 @@ def test_export_and_load_scitiff_with_scalar_coord(sample_image, tmp_path) -> No
     sample_image.coords['Ltotal'] = sc.scalar(0.0, unit='mm')
     tmp_file_path = tmp_path / 'test_scalar_coord.tiff'
     save_scitiff(sample_image, tmp_file_path)
-    loaded_image = load_scitiff(tmp_file_path)
+    loaded_image = load_scitiff(tmp_file_path, only_image=True)
     # exported image already has right order of dimensions
     assert sc.identical(sample_image, loaded_image)
 
@@ -104,7 +141,7 @@ def test_export_multi_dimension_coordinate_raises(
 def test_load_squeeze_false(sample_image, tmp_path) -> None:
     tmp_file_path = tmp_path / 'test.tiff'
     save_scitiff(sample_image, tmp_file_path)
-    loaded_image = load_scitiff(tmp_file_path, squeeze=False)
+    loaded_image = load_scitiff(tmp_file_path, squeeze=False, only_image=True)
     assert loaded_image.dims == SCITIFF_IMAGE_STACK_DIMENSIONS
 
 
@@ -149,7 +186,9 @@ def test_load_scipp_incompatible_dtype_fallback(
         match=f"dtype of ``{dtype}``. "
         f"The dtype will be converted to ``<class 'numpy.{expected_dtype}'>``",
     ):
-        loaded_image = load_scitiff(tmp_file_path, resolve_channels=False)['image']
+        loaded_image = load_scitiff(
+            tmp_file_path, resolve_channels=False, only_image=True
+        )
 
     assert loaded_image.dims == tuple(f"dim_{i}" for i in range(3))  # Image is squeezed
     assert loaded_image.dtype == expected_dtype
@@ -173,7 +212,7 @@ def test_load_imagej_scipp_incompatible_dtype_fallback(
         with pytest.warns(
             ImageJMetadataNotFoundWarning, match='ImageJ metadata not found'
         ):  # These dtypes are not supported by tifffile with `imagej=True`
-            loaded_image = load_scitiff(tmp_file_path)['image']
+            loaded_image = load_scitiff(tmp_file_path, only_image=True)
 
     assert loaded_image.dims == tuple(f"dim_{i}" for i in range(3))  # Image is squeezed
     assert loaded_image.dtype == expected_dtype
@@ -192,7 +231,7 @@ def test_load_imagej_incompatible_dtype_fallback(
     with pytest.warns(
         ImageJMetadataNotFoundWarning, match='ImageJ metadata not found'
     ):  # These dtypes are not supported by tifffile with `imagej=True`
-        loaded_image = load_scitiff(tmp_file_path)['image']
+        loaded_image = load_scitiff(tmp_file_path, only_image=True)
 
     assert loaded_image.dims == tuple(f"dim_{i}" for i in range(3))  # Image is squeezed
     assert loaded_image.dtype == expected_dtype
@@ -222,7 +261,7 @@ def test_load_incompatible_metadata_warns(sample_image: sc.DataArray, tmp_path) 
         UnmatchedMetadataWarning,
         match="Size of the image data does not match with the metadata.",
     ):
-        loaded_image = load_scitiff(tmp_file_path)['image']
+        loaded_image = load_scitiff(tmp_file_path, only_image=True)
 
     assert loaded_image.dims == tuple(f"dim_{i}" for i in range(2))  # Image is squeezed
 
@@ -235,7 +274,7 @@ def test_load_without_metadata_warns(tmp_path) -> None:
     with pytest.warns(
         ImageJMetadataNotFoundWarning, match='ImageJ metadata not found.'
     ):
-        loaded_image: sc.DataArray = load_scitiff(no_metadata_file_path)['image']
+        loaded_image = load_scitiff(no_metadata_file_path, only_image=True)
 
     assert loaded_image.dims == tuple(f"dim_{i}" for i in range(2))
     assert np.all(loaded_image.values == np.array([[1.0, 2], [3, 4]]))
@@ -250,7 +289,7 @@ def test_load_broken_metadata_warns(tmp_path) -> None:
         no_metadata_file_path, arbitrary_image, imagej=True, metadata={"meh": "meh"}
     )
     with pytest.warns(ScitiffMetadataWarning, match='Scitiff metadata is broken.'):
-        loaded_image: sc.DataArray = load_scitiff(no_metadata_file_path)['image']
+        loaded_image = load_scitiff(no_metadata_file_path, only_image=True)
 
     assert loaded_image.dims == tuple(f"dim_{i}" for i in range(2))
     assert np.all(loaded_image.values == arbitrary_image)

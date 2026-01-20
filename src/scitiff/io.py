@@ -4,7 +4,7 @@ import json
 import pathlib
 import warnings
 from enum import Enum
-from typing import TypeVar
+from typing import Any, Literal, TypeVar, overload
 
 import numpy as np
 import pydantic
@@ -15,6 +15,7 @@ from scipp.compat.dict import from_dict
 from ._schema import CHANNEL_DIMENSION_AND_COORDINATE_NAME as CHANNEL_DIM
 from ._schema import (
     SCITIFF_IMAGE_STACK_DIMENSIONS,
+    DAQMetadata,
     ImageDataArrayMetadata,
     ImageVariableMetadata,
     ScippVariable,
@@ -60,11 +61,15 @@ def _scipp_variable_to_model(var: sc.Variable) -> ScippVariable:
         )
     if var.ndim == 0:  # scalar variable
         values = var.value
+        if var.dtype == sc.DType.datetime64:
+            values = str(values)
     elif hasattr(var.values, "tolist"):
         # string values does not have `tolist` method
         values = var.values.tolist()
     else:
         values = list(var.values)
+        if var.dtype == sc.DType.datetime64:
+            values = [str(val) for val in values]
 
     return ScippVariable(
         dims=var.dims,
@@ -93,15 +98,75 @@ def _extract_metadata_from_dataarray(da: sc.DataArray) -> ImageDataArrayMetadata
     )
 
 
-def extract_metadata(dg: sc.DataGroup | sc.DataArray) -> SciTiffMetadataContainer:
-    if isinstance(dg, sc.DataArray):
-        _metadata = _extract_metadata_from_dataarray(dg)
+@overload
+def _wrap_extra_meta_value(value: str) -> str: ...
+
+
+@overload
+def _wrap_extra_meta_value(value: float) -> float: ...
+
+
+@overload
+def _wrap_extra_meta_value(value: sc.Variable) -> ScippVariable: ...
+
+
+def _wrap_extra_meta_value(
+    value: str | float | sc.Variable,
+) -> str | float | ScippVariable:
+    if isinstance(value, sc.Variable):
+        if value.dims:
+            raise ValueError(
+                f"Extra metadata {value} is non-scalar value. "
+                "Only scalar value is supported by the IO module."
+            )
+        return _scipp_variable_to_model(value)
+    elif isinstance(value, str | float | int):
+        return value
     else:
-        raise NotImplementedError(
-            "Extracting metadata from DataGroup to SCITIFF is not yet implemented."
+        raise ValueError(
+            f"Unexpected type of extra metadata {value}. "
+            "Only `str`, `float`, `int` or a scalar `scipp.Variable` "
+            "can be included in the extra metadata."
         )
 
-    return SciTiffMetadataContainer(scitiffmeta=SciTiffMetadata(image=_metadata))
+
+def _extract_extra_metadata_from_datagroup(dg: sc.DataGroup) -> dict | None:
+    if 'extra' not in dg:
+        return None
+    elif not isinstance(extra := dg['extra'], dict | sc.DataGroup):
+        raise ValueError("Extra metadata should be a dictionary or a scipp.DataGroup.")
+    return {
+        _extra_meta_key: _wrap_extra_meta_value(_extra_meta_value)
+        for _extra_meta_key, _extra_meta_value in extra.items()
+    }
+
+
+def extract_metadata(dg: sc.DataGroup | sc.DataArray) -> SciTiffMetadataContainer:
+    from scitiff import __version__
+
+    if isinstance(dg, sc.DataArray):
+        _img_metadata = _extract_metadata_from_dataarray(dg)
+        _extra_metadata = None
+        _daq_metadata = DAQMetadata()
+    else:
+        _img_metadata = _extract_metadata_from_dataarray(dg['image'])
+        _extra_metadata = _extract_extra_metadata_from_datagroup(dg)
+        _daq_metadata = dg.get('daq', DAQMetadata())
+
+    if not isinstance(_daq_metadata, DAQMetadata):
+        raise TypeError(
+            f"DAQ Metadata {_daq_metadata} must be an instance "
+            f"of the `scitiff.{DAQMetadata.__name__}`."
+        )
+
+    return SciTiffMetadataContainer(
+        scitiffmeta=SciTiffMetadata(
+            image=_img_metadata,
+            extra=_extra_metadata,
+            daq=_daq_metadata,
+            schema_version=__version__,
+        )
+    )
 
 
 def _validate_dimensions(da: sc.DataArray) -> None:
@@ -407,7 +472,7 @@ def to_scitiff_image(
     *,
     concat_stdevs_and_mask: bool = True,
     mask_name: str | None = None,
-) -> sc.DataArray | sc.Dataset:
+) -> sc.DataArray:
     """Modify dimnesions and shapes to match the scitiff image schema.
 
     The function will modify the dimensions and shapes of the DataArray.
@@ -489,33 +554,6 @@ def _validate_dtypes(da: sc.DataArray) -> None:
         )
 
 
-def _save_data_array(
-    da: sc.DataArray,
-    file_path: str | pathlib.Path,
-    *,
-    concat_stdevs_and_mask: bool = True,
-    mask_name: str | None = None,
-) -> None:
-    final_image = to_scitiff_image(
-        da, concat_stdevs_and_mask=concat_stdevs_and_mask, mask_name=mask_name
-    )
-    metadata = extract_metadata(final_image)
-    _validate_dtypes(final_image)
-    tf.imwrite(
-        file_path,
-        final_image.values,
-        imagej=True,
-        metadata={
-            key: json.dumps(value)
-            for key, value in metadata.model_dump(mode="json").items()
-            # Tiff metadata will automatically be translated to json-like-string
-            # so we need to convert the metadata to string in advance
-            # to catch the error early and make sure it can be loaded back.
-        },
-        dtype=str(final_image.dtype),
-    )
-
-
 def save_scitiff(
     dg: sc.DataGroup | sc.DataArray,
     file_path: str | pathlib.Path,
@@ -591,14 +629,37 @@ def save_scitiff(
 
     """
     if isinstance(dg, sc.DataArray):
-        _save_data_array(
-            dg,
-            file_path,
-            concat_stdevs_and_mask=concat_stdevs_and_mask,
-            mask_name=mask_name,
-        )
+        dg = sc.DataGroup(image=dg)
+    elif isinstance(dg, sc.DataGroup):
+        if 'image' not in dg:
+            raise ValueError(
+                f"DataGroup {dg} does not have 'image'. "
+                "Cannot extract metadata of the image or save the image."
+            )
+        dg = dg.copy(deep=False)
     else:
-        raise NotImplementedError("Saving DataGroup to SCITIFF is not yet implemented.")
+        raise TypeError("Unrecognizable type to save scitiff image.")
+
+    final_image = to_scitiff_image(
+        dg['image'], concat_stdevs_and_mask=concat_stdevs_and_mask, mask_name=mask_name
+    )
+    dg['image'] = final_image
+
+    metadata = extract_metadata(dg)
+    _validate_dtypes(final_image)
+    tf.imwrite(
+        file_path,
+        final_image.values,
+        imagej=True,
+        metadata={
+            key: json.dumps(value)
+            for key, value in metadata.model_dump(mode="json").items()
+            # Tiff metadata will automatically be translated to json-like-string
+            # so we need to convert the metadata to string in advance
+            # to catch the error early and make sure it can be loaded back.
+        },
+        dtype=str(final_image.dtype),
+    )
 
 
 def _is_nested_value(
@@ -721,13 +782,12 @@ def _read_image_as_dataarray(
 
 def _fall_back_loader(
     file_path: str | pathlib.Path, *, squeeze: bool = True
-) -> sc.DataGroup:
+) -> sc.DataArray:
     # This is a fall back loader for the image data
     # when the metadata is not found in the tiff file or it is broken.
     # The metadata is discarded and the image is loaded with arbitrary dimensions.
     image_values = tf.imread(file_path, squeeze=squeeze)
-    image_da = sc.DataArray(data=_wrap_as_arbitrary_variable(image_values))
-    return sc.DataGroup(image=image_da)
+    return sc.DataArray(data=_wrap_as_arbitrary_variable(image_values))
 
 
 class Channel(Enum):
@@ -801,12 +861,47 @@ def resolve_scitiff_channels(scitiff_image: T) -> T:
         return _resolve_channels(scitiff_image)
 
 
+def _build_scipp_variable_from_extra_metadata(container: SciTiffMetadataContainer):
+    scitiff_meta = container.scitiffmeta
+    if scitiff_meta.extra is not None:
+        new_extra = {
+            _extra_meta_key: from_dict(_extra_meta_value)
+            if isinstance(_extra_meta_value, dict)
+            else _extra_meta_value
+            for _extra_meta_key, _extra_meta_value in scitiff_meta.extra.items()
+        }
+        scitiff_meta.extra = new_extra
+
+    return container
+
+
+@overload
 def load_scitiff(
     file_path: str | pathlib.Path,
     *,
     squeeze: bool = True,
     resolve_channels: bool = True,
-) -> sc.DataGroup:
+    only_image: Literal[False] = False,
+) -> sc.DataGroup: ...
+
+
+@overload
+def load_scitiff(
+    file_path: str | pathlib.Path,
+    *,
+    squeeze: bool = True,
+    resolve_channels: bool = True,
+    only_image: Literal[True] = True,
+) -> sc.DataArray: ...
+
+
+def load_scitiff(
+    file_path: str | pathlib.Path,
+    *,
+    squeeze: bool = True,
+    resolve_channels: bool = True,
+    only_image: bool = False,
+) -> sc.DataArray | sc.DataGroup:
     """Load an image in SCITIFF format to a scipp data structure.
 
     Parameters
@@ -825,6 +920,11 @@ def load_scitiff(
             Channel interpreted as intensities, variances and mask
             is not yet officially specified by ``Scitiff`` schema.
             It may change in the future.
+
+    only_image:
+        If True, only the image will be returned as a ``scipp.DataArray``.
+        If False, ``scipp.DataGroup`` will be returned
+        along with the image and other metadata such as `DAQMetadata`.
 
     Returns
     -------
@@ -854,6 +954,8 @@ def load_scitiff(
     with tf.TiffFile(file_path) as tif:
         imagej_metadata = tif.imagej_metadata
 
+    # Container will remain as ``None`` if metadata cannot be loaded.
+    container = None
     if imagej_metadata is None:
         warnings.warn(
             "ImageJ metadata not found in the tiff file.\n"
@@ -861,7 +963,7 @@ def load_scitiff(
             stacklevel=2,
             category=ImageJMetadataNotFoundWarning,
         )
-        img = _fall_back_loader(file_path, squeeze=squeeze)
+        image_da = _fall_back_loader(file_path, squeeze=squeeze)
     else:
         try:
             loaded_metadata = {
@@ -879,7 +981,7 @@ def load_scitiff(
                 stacklevel=2,
                 category=ScitiffMetadataWarning,
             )
-            img = _fall_back_loader(file_path, squeeze=squeeze)
+            image_da = _fall_back_loader(file_path, squeeze=squeeze)
         else:
             try:
                 image_da = _read_image_as_dataarray(
@@ -888,7 +990,6 @@ def load_scitiff(
                 if squeeze:
                     image_da = image_da.squeeze()
 
-                img = sc.DataGroup(image=image_da)
             except Exception as e:
                 warnings.warn(
                     "Failed to reconstruct DataArray from metadata and image stack.\n"
@@ -897,6 +998,22 @@ def load_scitiff(
                     stacklevel=2,
                     category=RuntimeWarning,
                 )
-                img = _fall_back_loader(file_path, squeeze=squeeze)
+                image_da = _fall_back_loader(file_path, squeeze=squeeze)
 
-    return img if not resolve_channels else resolve_scitiff_channels(img)
+    # Resolve channels if needed
+    image_da = image_da if not resolve_channels else resolve_scitiff_channels(image_da)
+
+    if only_image:
+        return image_da
+
+    img: sc.DataGroup[Any] = sc.DataGroup(image=image_da)
+    # Add other fields in the DataGroup from the ScitiffMetadata instance.
+    # Relevant warning should have been already shown above
+    # if the ScitiffMetadata instance could not be built.
+    if container is not None:
+        # Rebuild the scalar scipp.Variable in the extra metadata if needed
+        container = _build_scipp_variable_from_extra_metadata(container)
+        for key in (_key for _key in SciTiffMetadata.model_fields if _key != 'image'):
+            img[key] = getattr(container.scitiffmeta, key)
+
+    return img
