@@ -782,8 +782,8 @@ def _read_image_as_dataarray(
     # the data is directly loaded into the exact shape.
     # Therefore we manually build the DataArray
     # instead of using ``scipp.from_dict`` function.
-    # However, each coordinate and mask is loaded using ``_from_dict`` function
-    # since they are serialized as dictionaries.
+    # However, each coordinate and mask is
+    # loaded using ``_from_json_dict`` function (that uses ``scipp.from_dict``).
     coords = {
         key: _from_json_dict(value.model_dump())
         for key, value in image_metadata.coords.items()
