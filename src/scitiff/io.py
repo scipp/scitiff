@@ -61,15 +61,11 @@ def _scipp_variable_to_model(var: sc.Variable) -> ScippVariable:
         )
     if var.ndim == 0:  # scalar variable
         values = var.value
-        if var.dtype == sc.DType.datetime64:
-            values = str(values)
     elif hasattr(var.values, "tolist"):
         # string values does not have `tolist` method
         values = var.values.tolist()
     else:
         values = list(var.values)
-        if var.dtype == sc.DType.datetime64:
-            values = [str(val) for val in values]
 
     return ScippVariable(
         dims=var.dims,
