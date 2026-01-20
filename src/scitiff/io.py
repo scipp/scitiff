@@ -44,6 +44,23 @@ class ScitiffMetadataWarning(Warning):
     """Warning for broken scitiff metadata."""
 
 
+def _from_dict(dict_repr_var: dict) -> sc.Variable:
+    try:
+        return from_dict(dict_repr_var)
+    except ValueError as err:
+        if dict_repr_var['dtype'] == 'datetime64':
+            corrected_repr_var = dict_repr_var.copy()
+            values = corrected_repr_var['values']
+            if isinstance(values, list):
+                values = [np.datetime64(val) for val in values]
+            else:
+                values = np.datetime64(values)
+            corrected_repr_var['values'] = values
+            return from_dict(corrected_repr_var)
+        else:
+            raise err
+
+
 def _wrap_unit(unit: str | None) -> str | None:
     # str(None), which is `None` is interpreted as `N` (neuton) when
     # it is loaded back from the json file.
@@ -761,14 +778,14 @@ def _read_image_as_dataarray(
     # the data is directly loaded into the exact shape.
     # Therefore we manually build the DataArray
     # instead of using ``scipp.from_dict`` function.
-    # However, each coordinate and mask is loaded using ``from_dict`` function
+    # However, each coordinate and mask is loaded using ``_from_dict`` function
     # since they are serialized as dictionaries.
     coords = {
-        key: from_dict(value.model_dump())
+        key: _from_dict(value.model_dump())
         for key, value in image_metadata.coords.items()
     }
     masks = {
-        key: from_dict(value.model_dump())
+        key: _from_dict(value.model_dump())
         for key, value in image_metadata.masks.items()
     }
     return sc.DataArray(
@@ -861,7 +878,7 @@ def _build_scipp_variable_from_extra_metadata(container: SciTiffMetadataContaine
     scitiff_meta = container.scitiffmeta
     if scitiff_meta.extra is not None:
         new_extra = {
-            _extra_meta_key: from_dict(_extra_meta_value)
+            _extra_meta_key: _from_dict(_extra_meta_value)
             if isinstance(_extra_meta_value, dict)
             else _extra_meta_value
             for _extra_meta_key, _extra_meta_value in scitiff_meta.extra.items()
