@@ -40,6 +40,8 @@ def sample_image() -> sc.DataArray:
         ),
         coords={
             't': sc.array(dims=['t'], values=[0, 1], unit='s'),
+            'global-time': sc.datetimes(dims=['t'], values=[0, 1], unit='s'),
+            'timestamp': sc.datetime('now', unit='hour'),
             'y': sc.linspace(dim='y', start=0.0, stop=300.0, num=3, unit='mm'),
             'x': sc.linspace(dim='x', start=0.0, stop=400.0, num=4, unit='mm'),
         },
@@ -54,7 +56,7 @@ def sample_image_datagroup(sample_image: sc.DataArray) -> sc.DataGroup:
         extra={
             'writer': 'RapBear',
             'generation': 1,
-            'year': sc.scalar(2026, unit='year'),
+            'today': sc.datetime('now', unit='s'),
         },
     )
 
