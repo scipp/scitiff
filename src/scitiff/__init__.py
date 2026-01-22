@@ -13,6 +13,7 @@ del importlib
 
 from ._schema import (
     SCITIFF_IMAGE_STACK_DIMENSIONS,
+    DAQMetadata,
     SciTiffMetadata,
     SciTiffMetadataContainer,
 )
@@ -27,3 +28,19 @@ from .io import (
     to_scitiff_image,
 )
 from .validator import validate_scitiff_metadata_container
+
+__all__ = [
+    'SCITIFF_IMAGE_STACK_DIMENSIONS',
+    'DAQMetadata',
+    'SciTiffMetadata',
+    'SciTiffMetadataContainer',
+    'concat_mask_as_channels',
+    'concat_stdevs_and_mask_as_channels',
+    'concat_stdevs_as_channels',
+    'load_scitiff',
+    'resolve_scitiff_channels',
+    'save_scitiff',
+    'show_metadata',
+    'to_scitiff_image',
+    'validate_scitiff_metadata_container',
+]
