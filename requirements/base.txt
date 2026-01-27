@@ -31,7 +31,7 @@ rpds-py==0.30.0
     # via
     #   jsonschema
     #   referencing
-scipp==25.12.0
+scipp==26.1.0
     # via -r base.in
 tifffile==2025.12.20
     # via -r base.in
@@ -39,6 +39,7 @@ typing-extensions==4.15.0
     # via
     #   pydantic
     #   pydantic-core
+    #   referencing
     #   typing-inspection
 typing-inspection==0.4.2
     # via pydantic
