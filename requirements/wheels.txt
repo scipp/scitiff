@@ -7,7 +7,9 @@
 #
 build==1.4.0
     # via -r wheels.in
-packaging==25.0
+packaging==26.0
     # via build
 pyproject-hooks==1.2.0
+    # via build
+tomli==2.4.0
     # via build
