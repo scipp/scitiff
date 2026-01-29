@@ -1,0 +1,184 @@
+
+{
+  "$defs": {
+    "DAQMetadata": {
+      "properties": {
+        "facility": {
+          "default": "Unknown",
+          "description": "Facility name",
+          "title": "Facility",
+          "type": "string"
+        },
+        "instrument": {
+          "default": "Unknown",
+          "description": "Instrument name",
+          "title": "Instrument",
+          "type": "string"
+        },
+        "detector_type": {
+          "default": "Unknown",
+          "description": "Detector type",
+          "title": "Detector Type",
+          "type": "string"
+        },
+        "source_type": {
+          "anyOf": [{ "type": "string" }, { "$ref": "#/$defs/SourceType" }],
+          "default": "Unknown",
+          "description": "Type of source(probe). i.e. neutron, x-ray, etc.",
+          "title": "Source Type"
+        },
+        "source": {
+          "anyOf": [{ "$ref": "#/$defs/NeutronMetadata" }, { "$ref": "#/$defs/XRayMetadata" }, { "$ref": "#/$defs/ElectronMetadata" }, { "type": "null" }],
+          "default": null,
+          "description": "Source metadata.",
+          "title": "Source"
+        },
+        "simulated": {
+          "anyOf": [{ "type": "boolean" }, { "type": "null" }],
+          "default": null,
+          "description": "Flag indicating if the data is simulated.",
+          "title": "Simulated"
+        }
+      },
+      "title": "DAQMetadata",
+      "type": "object"
+    },
+    "ElectronMetadata": {
+      "properties": {},
+      "title": "ElectronMetadata",
+      "type": "object"
+    },
+    "ImageDataArrayMetadata": {
+      "description": "Image DataArray Metadata without values(image).",
+      "properties": {
+        "data": {"$ref": "#/$defs/ImageVariableMetadata"},
+        "masks": {
+          "additionalProperties": {"$ref": "#/$defs/ScippVariable"},
+          "title": "Masks",
+          "type": "object"
+        },
+        "coords": {
+          "additionalProperties": {"$ref": "#/$defs/ScippVariable"},
+          "title": "Coords",
+          "type": "object"
+        },
+        "name": {
+          "anyOf": [{ "type": "string" }, { "type": "null" }],
+          "default": null,
+          "title": "Name"
+        }
+      },
+      "required": ["data"],
+      "title": "ImageDataArrayMetadata",
+      "type": "object"
+    },
+    "ImageVariableMetadata": {
+      "description": "Image Metadata.",
+      "properties": {
+        "dims": {
+          "maxItems": 5,
+          "minItems": 5,
+          "prefixItems": [{ "const": "t", "type": "string" }, { "const": "z", "type": "string" }, { "const": "c", "type": "string" }, { "const": "y", "type": "string" }, { "const": "x", "type": "string" }],
+          "title": "Dims",
+          "type": "array"
+        },
+        "shape": {
+          "maxItems": 5,
+          "minItems": 5,
+          "prefixItems": [{ "type": "integer" }, { "type": "integer" }, { "type": "integer" }, { "type": "integer" }, { "type": "integer" }],
+          "title": "Shape",
+          "type": "array"
+        },
+        "unit": {
+          "anyOf": [{ "type": "string" }, { "type": "null" }],
+          "title": "Unit"
+        },
+        "dtype": {"title": "Dtype", "type": "string"}
+      },
+      "required": ["dims", "shape", "unit", "dtype"],
+      "title": "ImageVariableMetadata",
+      "type": "object"
+    },
+    "NeutronMetadata": {
+      "properties": {
+        "neutron_type": {"$ref": "#/$defs/NeutronSourceType"},
+        "wavelength_range": {"$ref": "#/$defs/ScippVariable"}
+      },
+      "required": ["neutron_type", "wavelength_range"],
+      "title": "NeutronMetadata",
+      "type": "object"
+    },
+    "NeutronSourceType": {
+      "enum": ["continuous", "long-pulse", "short-pulse"],
+      "title": "NeutronSourceType",
+      "type": "string"
+    },
+    "SciTiffMetadata": {
+      "description": "SCITIFF Metadata.",
+      "properties": {
+        "image": {"$ref": "#/$defs/ImageDataArrayMetadata"},
+        "daq": {"$ref": "#/$defs/DAQMetadata"},
+        "extra": {
+          "anyOf": [{ "additionalProperties": true, "type": "object" }, { "type": "null" }],
+          "default": null,
+          "description": "Additional metadata that is not part of the schema.",
+          "title": "Extra"
+        },
+        "schema_version": {
+          "default": "{VERSION_PLACEHOLDER}",
+          "title": "Schema Version",
+          "type": "string"
+        }
+      },
+      "required": ["image"],
+      "title": "SciTiffMetadata",
+      "type": "object"
+    },
+    "ScippVariable": {
+      "description": "Scipp Variable Metadata with the values.\n\nOnly 1D variable is allowed for metadata.",
+      "properties": {
+        "dims": {
+          "items": {"type": "string"},
+          "title": "Dims",
+          "type": "array"
+        },
+        "shape": {
+          "items": {"type": "integer"},
+          "title": "Shape",
+          "type": "array"
+        },
+        "unit": {
+          "anyOf": [{ "type": "string" }, { "type": "null" }],
+          "title": "Unit"
+        },
+        "dtype": {"title": "Dtype", "type": "string"},
+        "values": {
+          "anyOf": [{ "type": "number" }, { "type": "string" }, { "items": { "type": "number" }, "type": "array" }, { "items": { "type": "string" }, "type": "array" }],
+          "title": "Values"
+        }
+      },
+      "required": ["dims", "shape", "unit", "dtype", "values"],
+      "title": "ScippVariable",
+      "type": "object"
+    },
+    "SourceType": {
+      "description": "Enum for probe types.",
+      "enum": ["neutron", "x-ray", "electron"],
+      "title": "SourceType",
+      "type": "string"
+    },
+    "XRayMetadata": {
+      "properties": {},
+      "title": "XRayMetadata",
+      "type": "object"
+    }
+  },
+  "additionalProperties": true,
+  "description": "SCITIFF Compatible Metadata.",
+  "properties": {
+    "scitiffmeta": {"$ref": "#/$defs/SciTiffMetadata"}
+  },
+  "required": ["scitiffmeta"],
+  "title": "SciTiffMetadataContainer",
+  "type": "object"
+}
