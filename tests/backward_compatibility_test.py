@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: BSD-3-Clause
-# Copyright (c) 2025 Scipp(ESS) contributors (https://github.com/scipp)
+# Copyright (c) 2026 Scipp(ESS) contributors (https://github.com/scipp)
 import json
 import pathlib
 from contextlib import contextmanager

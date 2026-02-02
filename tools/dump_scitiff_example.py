@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: BSD-3-Clause
-# Copyright (c) 2025 Ess-dmsc-dram contributors (https://github.com/ess-dmsc-dram)
+# Copyright (c) 2026 Scipp(ESS) contributors (https://github.com/scipp)
 import logging
 import pathlib
 
