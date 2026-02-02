@@ -5,7 +5,7 @@
 #
 #    requirements upgrade
 #
-cachetools==6.2.6
+cachetools==7.0.0
     # via tox
 certifi==2026.1.4
     # via requests
@@ -44,16 +44,8 @@ requests==2.32.5
     # via -r ci.in
 smmap==5.0.2
     # via gitdb
-tomli==2.4.0
-    # via
-    #   pyproject-api
-    #   tox
 tox==4.34.1
     # via -r ci.in
-typing-extensions==4.15.0
-    # via
-    #   tox
-    #   virtualenv
 urllib3==2.6.3
     # via requests
 virtualenv==20.36.1
