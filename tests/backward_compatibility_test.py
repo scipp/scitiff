@@ -95,13 +95,13 @@ _KNOWN_ERRORS: dict[str, tuple[KnownError]] = {}  # No known errors yet
 
 
 @contextmanager
-def with_known_errors(_errors: tuple[KnownError, ...]):
+def known_backward_compatibility_issues(_errors: tuple[KnownError, ...]):
     if len(_errors) == 1:
         with pytest.raises(_errors[0].error_type, match=_errors[0].error_match):
             yield
     elif len(_errors) >= 1:
         with pytest.raises(_errors[0].error_type, match=_errors[0].error_match):
-            with with_known_errors(_errors[1:]):
+            with known_backward_compatibility_issues(_errors[1:]):
                 yield
     else:
         yield
@@ -135,5 +135,5 @@ def test_example_files_for_all_releases_exist(scitiff_version) -> None:
 )
 def test_loading_old_version_files(scitiff_version) -> None:
     _known_erros = _KNOWN_ERRORS.get(scitiff_version, ())
-    with with_known_errors(_known_erros):
+    with known_backward_compatibility_issues(_known_erros):
         load_scitiff(_get_scitiff_example_file_path(scitiff_version))
