@@ -48,4 +48,5 @@ docs/generated/
 *.nxspe
 *.tiff
 *.tif
+!tests/_regression_test_files/*.tiff
 *.mtz
