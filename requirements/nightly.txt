@@ -52,7 +52,7 @@ rpds-py==0.30.0
     # via
     #   jsonschema
     #   referencing
-scipp==100.0.0.dev0
+scipp==26.2.0
     # via -r nightly.in
 tifffile==2026.1.28
     # via -r nightly.in
