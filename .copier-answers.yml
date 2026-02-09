@@ -1,5 +1,5 @@
 # Changes here will be overwritten by Copier; NEVER EDIT MANUALLY
-_commit: c89cb2e
+_commit: '2888942'
 _src_path: gh:scipp/copier_template
 description: Scientific tiff format for imaging experiments.
 max_python: '3.13'
@@ -10,4 +10,4 @@ orgname: scipp
 prettyname: SciTiff
 projectname: scitiff
 related_projects: Scipp,Plopp,ESSImaging,EasyImaging
-year: 2025
+year: 2026
