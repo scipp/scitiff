@@ -13,7 +13,7 @@ macos = "14.0"
 scipp = "0m"
 
 [dependencies]
-python = "3.11.*"
+python = ">=3.11.0"
 
 [pypi-dependencies]
 scitiff = { path = ".", editable = true, extras = ["test"] }
