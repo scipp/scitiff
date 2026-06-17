@@ -48,7 +48,7 @@ jobs:
         with:
           ref: ${{ inputs.branch == '' && github.ref_name || inputs.branch }}
           fetch-tags: true  # history required to determine version
-      - uses: actions/setup-pixi@v0.9.6
+      - uses: prefix-dev/setup-pixi@v0.9.6
         with:
           pixi-version: 0.70.1
           environment: docs
