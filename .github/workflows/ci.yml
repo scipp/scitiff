@@ -21,6 +21,7 @@ jobs:
         with:
           pixi-version: v0.70.1
           environments: lint
+          frozen: true
       - name: Run lint action
         run: pixi run -e lint lint
       - uses: pre-commit-ci/lite-action@v1.1.0
