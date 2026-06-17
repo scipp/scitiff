@@ -51,7 +51,7 @@ jobs:
       - uses: prefix-dev/setup-pixi@v0.9.6
         with:
           pixi-version: v0.70.1
-          environment: docs
+          environments: docs
       - name: Install release version if needed
         if: ${{ inputs.version != '' }}
         run: |

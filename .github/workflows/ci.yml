@@ -20,7 +20,7 @@ jobs:
       - uses: prefix-dev/setup-pixi@v0.9.6
         with:
           pixi-version: v0.70.1
-          environment: lint
+          environments: lint
       - name: Run lint action
         run: pixi run -e lint lint
       - uses: pre-commit-ci/lite-action@v1.1.0
