@@ -27,6 +27,10 @@ cmd = "pytest"
 ipykernel = "<7"
 jupyterlab = ">=4.4"
 
+# ==================== CI feature ======================
+
+[feature.nightly.pypi-dependencies]
+
 # ==================== Lint feature ====================
 
 [feature.lint.pypi-dependencies]
@@ -54,7 +58,7 @@ cmd = "scitiff-dev-dump-schemas --output docs/_static/metadata-schema.json"
 [feature.docs.tasks.docs]
 depends-on = [ "dump-metadata-example", "dump-schemas" ]
 args = [ { "arg" = "builder", "choices" = [ "html", "linkcheck" ], default = "html" } ]
-cmd = "python -m sphinx -W -j2 -v -b {{builder}} -d .docs_doctrees docs html & python -m sphinx -W -j2 -v -b doctest -d .docs_doctrees -D nbsphinx_execute=never docs html & find html -type f -name '*.ipynb' -not -path 'html/_sources/*' -delete"
+cmd = "python -m sphinx -W -j2 -v -b {{builder}} -d .docs_doctrees docs html && python -m sphinx -W -j2 -v -b doctest -d .docs_doctrees -D nbsphinx_execute=never docs html"
 
 # ==================== Environments ====================
 
