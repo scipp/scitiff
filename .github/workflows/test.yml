@@ -41,6 +41,7 @@ jobs:
         with:
           pixi-version: v0.70.1
           environments: ${{ inputs.pixi-environment }}
+          frozen: true
       - name: Run unit tests
         run: pixi run -e ${{ inputs.pixi-environment}} test
       - uses: actions/upload-artifact@v7.0.1

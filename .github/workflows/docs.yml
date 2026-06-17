@@ -52,6 +52,7 @@ jobs:
         with:
           pixi-version: v0.70.1
           environments: docs
+          frozen: true
       - name: Install release version if needed
         if: ${{ inputs.version != '' }}
         run: |
