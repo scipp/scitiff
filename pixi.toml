@@ -9,9 +9,6 @@ exclude-newer = "14d"
 # Scipp does not support older OSX versions.
 macos = "14.0"
 
-[exclude-newer]
-scipp = "0m"
-
 [dependencies]
 python = ">=3.11.0"
 
@@ -30,6 +27,7 @@ jupyterlab = ">=4.4"
 # ==================== CI feature ======================
 
 [feature.nightly.pypi-dependencies]
+scipp = { version = "==100.0.0.dev0", index = "https://pypi.anaconda.org/scipp-nightly-wheels/simple/" }
 
 # ==================== Lint feature ====================
 
@@ -66,3 +64,4 @@ cmd = "python -m sphinx -W -j2 -v -b {{builder}} -d .docs_doctrees docs html && 
 default = { features = ["dev"], solve-group = "default" }
 docs = { features = ["docs"], solve-group = "docs" }
 lint = { features = ["lint"], solve-group = "lint" }
+nightly = { features = ["nightly"], solve-group = "nightly" }

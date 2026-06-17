@@ -6,7 +6,7 @@ on:
       os-variant:
         default: 'ubuntu-24.04'
         type: string
-      python-version:  # default(3.11), py312, py313, py314
+      pixi-environment:  # default(3.11), py312, py313, py314
         default: 'default'
         type: string
       coverage-report:
@@ -20,7 +20,7 @@ on:
       os-variant:
         default: 'ubuntu-24.04'
         type: string
-      python-version:  # default(3.11), py312, py313, py314
+      pixi-environment:  # default(3.11), py312, py313, py314
         default: 'default'
         type: string
       coverage-report:
@@ -40,9 +40,9 @@ jobs:
       - uses: prefix-dev/setup-pixi@v0.9.6
         with:
           pixi-version: v0.70.1
-          environments: ${{ inputs.python-version }}
+          environments: ${{ inputs.pixi-environment }}
       - name: Run unit tests
-        run: pixi run -e ${{ inputs.python-version}} test
+        run: pixi run -e ${{ inputs.pixi-environment}} test
       - uses: actions/upload-artifact@v7.0.1
         if: ${{ inputs.coverage-report }}
         with:
