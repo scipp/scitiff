@@ -39,7 +39,7 @@ jobs:
           ref: ${{ inputs.checkout_ref }}
       - uses: prefix-dev/setup-pixi@v0.9.6
         with:
-          pixi-version: 0.70.1
+          pixi-version: v0.70.1
           environment: ${{ inputs.python-version }}
       - name: Run unit tests
         run: pixi run -e ${{ inputs.python-version}} test
