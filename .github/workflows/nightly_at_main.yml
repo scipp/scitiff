@@ -27,7 +27,3 @@ jobs:
         with:
           name: pixi-lock-file
           path: pixi.lock
-      - uses: actions/upload-artifact@v7.0.1
-        with:
-          name: CoverageReport
-          path: coverage_html/
