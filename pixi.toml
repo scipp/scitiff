@@ -21,6 +21,9 @@ cmd = "pytest"
 
 # ==================== Dev feature ====================
 
+[feature.dev.dependencies]
+python = "3.11.*"
+
 [feature.dev.pypi-dependencies]
 ipykernel = "<7"
 jupyterlab = ">=4.4"
@@ -62,7 +65,7 @@ cmd = "python -m sphinx -W -j2 -v -b {{builder}} -d .docs_doctrees docs html && 
 # ==================== Environments ====================
 
 [environments]
-default = { features = ["dev"], solve-group = "default" }
+default = { features = ["dev", "lint"], solve-group = "default" }
 docs = { features = ["docs"], solve-group = "docs" }
 lint = { features = ["lint"], solve-group = "lint" }
 lower-bound = { features = ["lower-bound"], solve-group = "lower-bound" }
