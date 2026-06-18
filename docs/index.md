@@ -60,7 +60,8 @@ Therefore `scitiff` project aims to define a consistent way of storing the physi
 ## Quick Links
 
 :::{card} IO User Guide
-:link: user-guide/io.html
+:link: user-guide/io
+:link-type: doc
 :::
 
 ## Scitiff Metadata Schema
@@ -68,7 +69,7 @@ Metadata is stored as a plain text `json` so the schema is defined as a `json sc
 
 Here is an example of the scitiff metadata of a tiff file.
 
-:::{literalinclude} ./_static/example_metadata.json
+:::{literalinclude} ./_static/example-metadata.json
   :language: JSON
 :::
 
@@ -88,7 +89,7 @@ But the `values` of the `image` is supposedly stored as tiff stack.
 ```{note}
   The metadata schema is defined as a [`pydantic.Model`](https://docs.pydantic.dev/latest/concepts/models/) and exported as a plain text json so that any platform can use the schema.
 
-  See source code of the [`ScitiffMetadataContainer`](https://ess-dmsc-dram.github.io/scitiff/_modules/scitiff/_schema.html#SciTiffMetadataContainer) to see the pydantic model definition.
+  See source code of the [`ScitiffMetadataContainer`](https://scipp.github.io/scitiff/_modules/scitiff/_schema.html#SciTiffMetadataContainer) to see the pydantic model definition.
 ```
 
 ## Download Scitiff Metadata Schema

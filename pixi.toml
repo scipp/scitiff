@@ -1,0 +1,68 @@
+[workspace]
+channels = ["conda-forge"]
+name = "scitiff"
+platforms = ["linux-64", "osx-64", "osx-arm64", "win-64"]
+version = "0.1.0"
+requires-pixi = ">=0.68"
+exclude-newer = "14d"
+
+[system-requirements]
+# Scipp does not support older OSX versions.
+macos = "14.0"
+
+[dependencies]
+python = ">=3.11.0"
+
+[pypi-dependencies]
+scitiff = { path = ".", editable = true, extras = ["test"] }
+
+[tasks.test]
+cmd = "pytest"
+
+# ==================== Dev feature ====================
+
+[feature.dev.pypi-dependencies]
+ipykernel = "<7"
+jupyterlab = ">=4.4"
+
+# ==================== Dev feature ====================
+
+[feature.lower-bound]
+solve-strategy = "lowest-direct"
+
+# ==================== Lint feature ====================
+
+[feature.lint.pypi-dependencies]
+prek = "==0.3.6"
+ruff = ">=0.15"
+mypy = "*"
+
+[feature.lint.tasks]
+lint = "prek run --all-files"
+check = "ruff check ."
+format = "ruff format ."
+mypy = "python -m mypy ."
+
+# ==================== Docs feature ====================
+
+[feature.docs.pypi-dependencies]
+scitiff = { path = ".", editable = true, extras = ["docs"] }
+
+[feature.docs.tasks.dump-metadata-example]
+cmd = "scitiff-dump-metadata-example --output docs/_static/example-metadata.json"
+
+[feature.docs.tasks.dump-schemas]
+cmd = "scitiff-dev-dump-schemas --output docs/_static/metadata-schema.json"
+
+[feature.docs.tasks.docs]
+depends-on = [ "dump-metadata-example", "dump-schemas" ]
+args = [ { "arg" = "builder", "choices" = [ "html", "linkcheck" ], default = "html" } ]
+cmd = "python -m sphinx -W -j2 -v -b {{builder}} -d .docs_doctrees docs html && python -m sphinx -W -j2 -v -b doctest -d .docs_doctrees -D nbsphinx_execute=never docs html"
+
+# ==================== Environments ====================
+
+[environments]
+default = { features = ["dev"], solve-group = "default" }
+docs = { features = ["docs"], solve-group = "docs" }
+lint = { features = ["lint"], solve-group = "lint" }
+lower-bound = { features = ["lower-bound"], solve-group = "lower-bound" }

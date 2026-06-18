@@ -6,29 +6,24 @@ on:
     - cron: '30 1 * * 1-5'
 
 jobs:
-  setup:
-    name: Setup variables
-    runs-on: 'ubuntu-24.04'
-    outputs:
-      min_python: ${{ steps.vars.outputs.min_python }}
-    steps:
-      - uses: actions/checkout@v4
-      - name: Get Python version for other CI jobs
-        id: vars
-        run: echo "min_python=$(< .github/workflows/python-version-ci)" >> "$GITHUB_OUTPUT"
-
-  tests:
-    name: Tests
-    needs: setup
+  test:
     strategy:
       matrix:
         os: ['ubuntu-24.04']
-        python:
-          - version: '${{needs.setup.outputs.min_python}}'
-            tox-env: 'nightly'
-    uses: ./.github/workflows/test.yml
-    with:
-      os-variant: ${{ matrix.os }}
-      python-version: ${{ matrix.python.version }}
-      tox-env: ${{ matrix.python.tox-env }}
-    secrets: inherit
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v6.0.3
+      - name: Overwrite pixi toml file and append nightly feature.
+        run: bash tools/nightly/override-pixi-config-nightly.sh && cat pixi.toml
+      - uses: prefix-dev/setup-pixi@v0.9.6
+        with:
+          pixi-version: v0.70.1
+          environments: nightly
+          locked: false
+          frozen: false
+      - name: Run unit tests
+        run: pixi run -e nightly test
+      - uses: actions/upload-artifact@v7.0.1
+        with:
+          name: pixi-lock-file
+          path: pixi.lock

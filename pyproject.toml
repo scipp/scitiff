@@ -43,6 +43,21 @@ test = [
     "pytest >= 8.0",
     "requests >= 2.32.5"  # Tight lower-bound for better security.
 ]
+docs = [
+    "autodoc-pydantic",
+    "ipykernel",
+    "ipython!=8.7.0",  # Breaks syntax highlighting in Jupyter code cells.
+    "myst-parser",
+    "nbsphinx",
+    "pydata-sphinx-theme>=0.14",
+    "sphinx<9.0.0",
+    "sphinx-autodoc-typehints",
+    "sphinx-copybutton",
+    "sphinx-design",
+    "plopp",
+    "autodoc_pydantic",
+    "rich"
+]
 gui = [
     "textual",
 ]

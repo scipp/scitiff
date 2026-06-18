@@ -6,13 +6,8 @@ on:
       os-variant:
         default: 'ubuntu-24.04'
         type: string
-      python-version:
-        type: string
-      tox-env:
-        default: 'test'
-        type: string
-      pip-recipe:
-        default: 'requirements/ci.txt'
+      pixi-environment:  # default(3.11), py312, py313, py314
+        default: 'default'
         type: string
       coverage-report:
         default: false
@@ -25,13 +20,8 @@ on:
       os-variant:
         default: 'ubuntu-24.04'
         type: string
-      python-version:
-        type: string
-      tox-env:
-        default: 'test'
-        type: string
-      pip-recipe:
-        default: 'requirements/ci.txt'
+      pixi-environment:  # default(3.11), py312, py313, py314
+        default: 'default'
         type: string
       coverage-report:
         default: false
@@ -40,39 +30,25 @@ on:
         default: ''
         type: string
 
+env:
+  PIXI_FROZEN: true
+  PIXI_NO_INSTALL: true
+
 jobs:
-  package-test:
-    runs-on: ${{ inputs.os-variant }}
-
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: ${{ inputs.checkout_ref }}
-      - uses: actions/setup-python@v5
-        with:
-          python-version: ${{ inputs.python-version }}
-      - run: python -m pip install --upgrade pip
-      - run: python -m pip install .
-      - run: python tests/package_test.py
-        name: Run package tests
-
   test:
     runs-on: ${{ inputs.os-variant }}
-    env:
-        ESS_PROTECTED_FILESTORE_USERNAME: ${{ secrets.ESS_PROTECTED_FILESTORE_USERNAME }}
-        ESS_PROTECTED_FILESTORE_PASSWORD: ${{ secrets.ESS_PROTECTED_FILESTORE_PASSWORD }}
-
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6.0.3
         with:
           ref: ${{ inputs.checkout_ref }}
-      - uses: actions/setup-python@v5
+      - uses: prefix-dev/setup-pixi@v0.9.6
         with:
-          python-version: ${{ inputs.python-version }}
-      - run: python -m pip install --upgrade pip
-      - run: python -m pip install -r ${{ inputs.pip-recipe }}
-      - run: tox -e ${{ inputs.tox-env }}
-      - uses: actions/upload-artifact@v4
+          pixi-version: v0.70.1
+          environments: ${{ inputs.pixi-environment }}
+          frozen: true
+      - name: Run unit tests
+        run: pixi run -e ${{ inputs.pixi-environment}} test
+      - uses: actions/upload-artifact@v7.0.1
         if: ${{ inputs.coverage-report }}
         with:
           name: CoverageReport

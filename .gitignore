@@ -4,8 +4,12 @@ dist
 html
 .tox
 *.egg-info
-# we lock dependencies with pip-compile, not uv
+# we lock dependencies with pixi
 uv.lock
+# docs build artifacts
+docs/_static/example-metadata.json
+docs/_static/metadata-schema.json
+.docs_doctrees/
 
 *.sw?
 
@@ -50,3 +54,7 @@ docs/generated/
 *.tif
 !tests/_regression_test_files/*.tiff
 *.mtz
+
+# pixi environments
+.pixi/*
+!.pixi/config.toml
