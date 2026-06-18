@@ -40,7 +40,6 @@ jobs:
     with:
       os-variant: ${{ matrix.os }}
       pixi-environment: ${{ matrix.pixi-environment }}
-    secrets: inherit
 
   docs:
     needs: tests
@@ -49,4 +48,3 @@ jobs:
       publish: false
       linkcheck: ${{ github.ref == 'refs/heads/main' }}
       branch: ${{ github.head_ref == '' && github.ref_name || github.head_ref }}
-    secrets: inherit
