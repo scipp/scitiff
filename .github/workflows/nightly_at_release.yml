@@ -16,7 +16,7 @@ jobs:
       - uses: prefix-dev/setup-pixi@v0.9.6
         with:
           pixi-version: v0.70.1
-          environments: nightly
+          environments: default
           locked: false  # Ensure the lock file will be updated.
           frozen: false  # Ensure updated dependencies will be installed.
       - name: Run unit tests
