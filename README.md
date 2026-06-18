@@ -6,6 +6,10 @@
 [![scitiff](https://github.com/scipp/scitiff/actions/workflows/nightly_at_main.yml/badge.svg?branch=main)](https://github.com/scipp/scitiff/actions/workflows/nightly_at_main.yml)
 [![scitiff](https://github.com/scipp/scitiff/actions/workflows/nightly_at_release.yml/badge.svg?branch=main)](https://github.com/scipp/scitiff/actions/workflows/nightly_at_release.yml)
 
+[![Nightly test at latest releases](https://github.com/scipp/scitiff/actions/workflows/nightly_at_release.yml/badge.svg)](https://github.com/scipp/scitiff/actions/workflows/nightly_at_release.yml)
+[![Nightly test at main branch](https://github.com/scipp/scitiff/actions/workflows/nightly_at_main.yml/badge.svg)](https://github.com/scipp/scitiff/actions/workflows/nightly_at_main.yml)
+[![Nightly test using lower bound dependencies](https://github.com/scipp/scitiff/actions/workflows/nightly_at_main_lower_bound.yml/badge.svg)](https://github.com/scipp/scitiff/actions/workflows/nightly_at_main_lower_bound.yml)
+
 # SciTiff
 
 ## About
