@@ -6,13 +6,26 @@ on:
     - cron: '30 1 * * 1-5'
 
 jobs:
-  tests:
-    name: Tests
+  test:
     strategy:
       matrix:
         os: ['ubuntu-24.04']
-    uses: ./.github/workflows/test.yml
-    with:
-      os-variant: ${{ matrix.os }}
-      pixi-environment: nightly
-    secrets: inherit
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v6.0.3
+      - name: Overwrite pixi toml file and append nightly feature.
+        run: bash tools/nightly/override-pixi-config-nightly.sh && cat pixi.toml
+      - uses: prefix-dev/setup-pixi@v0.9.6
+        with:
+          pixi-version: v0.70.1
+          environments: nightly
+      - name: Run unit tests
+        run: pixi run -e nightly test
+      - uses: actions/upload-artifact@v7.0.1
+        with:
+          name: pixi-lock-file
+          path: pixi.lock
+      - uses: actions/upload-artifact@v7.0.1
+        with:
+          name: CoverageReport
+          path: coverage_html/
