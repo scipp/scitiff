@@ -24,11 +24,6 @@ cmd = "pytest"
 ipykernel = "<7"
 jupyterlab = ">=4.4"
 
-# ==================== CI feature ======================
-
-[feature.nightly.pypi-dependencies]
-scipp = { version = "==100.0.0.dev0", index = "https://pypi.anaconda.org/scipp-nightly-wheels/simple/" }
-
 # ==================== Lint feature ====================
 
 [feature.lint.pypi-dependencies]
@@ -64,4 +59,3 @@ cmd = "python -m sphinx -W -j2 -v -b {{builder}} -d .docs_doctrees docs html && 
 default = { features = ["dev"], solve-group = "default" }
 docs = { features = ["docs"], solve-group = "docs" }
 lint = { features = ["lint"], solve-group = "lint" }
-nightly = { features = ["nightly"], solve-group = "nightly" }
