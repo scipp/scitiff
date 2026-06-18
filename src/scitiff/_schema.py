@@ -45,14 +45,31 @@ class ScippVariableMetadata(BaseModel):
     dtype: str
 
 
-class ScippVariable(ScippVariableMetadata):
-    """Scipp Variable Metadata with the values.
+class ScippVariable0D(ScippVariableMetadata):
+    """Scipp Variable Metadata with scalar value."""
 
-    Only 1D variable is allowed for metadata.
+    values: float | str
+    """The scalar of the variable."""
+
+
+class ScippVariable1D(ScippVariableMetadata):
+    """Scipp Variable Metadata with 1D array values."""
+
+    values: list[float] | list[str]
+    """The 1D values of the variable."""
+
+
+class ScippVariable2D(ScippVariableMetadata):
+    """Scipp Variable Metadata with 2D array values.
+
+    Only numbers are allowed for 2D array values.
     """
 
-    values: float | str | list[float] | list[str]
-    """The values of the variable."""
+    values: list[list[float]]
+    """The 2D values of the variable."""
+
+
+ScippVariable = ScippVariable0D | ScippVariable1D | ScippVariable2D
 
 
 class ImageVariableMetadata(ScippVariableMetadata):
