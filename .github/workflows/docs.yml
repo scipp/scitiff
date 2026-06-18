@@ -45,7 +45,6 @@ jobs:
     name: Build documentation
     runs-on: 'ubuntu-24.04'
     steps:
-      - run: sudo apt install --yes graphviz pandoc
       - uses: actions/checkout@v6.0.3
         with:
           ref: ${{ inputs.branch == '' && github.ref_name || inputs.branch }}
