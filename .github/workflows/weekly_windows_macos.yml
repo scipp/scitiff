@@ -1,0 +1,19 @@
+name: Windows and MacOS weekly tests
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 2 * * 1'
+
+jobs:
+  tests:
+    name: Tests
+    strategy:
+      matrix:
+        os: ['macos-latest', 'windows-latest']
+        pixi-environment: ['default']
+    uses: ./.github/workflows/test.yml
+    with:
+      os-variant: ${{ matrix.os }}
+      pixi-environment: ${{ matrix.pixi-environment }}
+
