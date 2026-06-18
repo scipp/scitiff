@@ -30,6 +30,10 @@ on:
         default: ''
         type: string
 
+env:
+  PIXI_FROZEN: true
+  PIXI_NO_INSTALL: true
+
 jobs:
   test:
     runs-on: ${{ inputs.os-variant }}
