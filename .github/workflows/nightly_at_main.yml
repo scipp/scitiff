@@ -19,6 +19,8 @@ jobs:
         with:
           pixi-version: v0.70.1
           environments: nightly
+          locked: false
+          frozen: false
       - name: Run unit tests
         run: pixi run -e nightly test
       - uses: actions/upload-artifact@v7.0.1
