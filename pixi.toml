@@ -3,6 +3,7 @@ channels = ["conda-forge"]
 name = "scitiff"
 platforms = ["linux-64", "osx-64", "osx-arm64", "win-64"]
 version = "0.1.0"
+require-pixi = ">=0.68"
 exclude-newer = "14d"
 
 [system-requirements]
