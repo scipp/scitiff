@@ -25,6 +25,11 @@ cmd = "pytest"
 ipykernel = "<7"
 jupyterlab = ">=4.4"
 
+# ==================== Dev feature ====================
+
+[feature.lower-bound]
+solve-strategy = "lowest-direct"
+
 # ==================== Lint feature ====================
 
 [feature.lint.pypi-dependencies]
@@ -60,3 +65,4 @@ cmd = "python -m sphinx -W -j2 -v -b {{builder}} -d .docs_doctrees docs html && 
 default = { features = ["dev"], solve-group = "default" }
 docs = { features = ["docs"], solve-group = "docs" }
 lint = { features = ["lint"], solve-group = "lint" }
+lower-bound = { features = ["lower-bound"], solve-group = "lower-bound" }
