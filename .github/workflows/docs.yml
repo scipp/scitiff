@@ -37,6 +37,8 @@ on:
 
 env:
   VERSION: ${{ inputs.version }}
+  PIXI_FROZEN: true
+  PIXI_NO_INSTALL: true
 
 jobs:
   docs:
