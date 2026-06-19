@@ -64,7 +64,7 @@ def _from_json_dict(dict_repr_var: dict) -> sc.Variable:
             raise err
 
 
-def _wrap_unit(unit: str | None) -> str | None:
+def _wrap_unit(unit: str | sc.Unit | None) -> str | None:
     # str(None), which is `None` is interpreted as `N` (neuton) when
     # it is loaded back from the json file.
     return str(unit) if unit is not None else None
