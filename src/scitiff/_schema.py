@@ -68,7 +68,7 @@ class ScippVariable2D(ScippVariableMetadata):
 
     dims: tuple[str, str]
     shape: tuple[int, int]
-    values: list[list[float]]
+    values: list[list[float]] = Field(strict=True)
     """The 2D values list of the variable."""
 
 

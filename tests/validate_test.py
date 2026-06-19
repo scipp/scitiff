@@ -4,6 +4,7 @@ import pytest
 import scipp as sc
 
 from scitiff import validate_scitiff_metadata_container
+from scitiff._schema import ScippVariable2D
 from scitiff.io import extract_metadata
 
 
@@ -41,3 +42,14 @@ def test_validation(sample_image) -> None:
         # If the mode is not 'json', the test will fail because it will contain
         # tuples, which will not validate as an array.
     )
+
+
+def multi_dimensional_string_array_invalid_raises() -> None:
+    with pytest.raises(ValueError, match="Failed to construct pydantic model"):
+        ScippVariable2D(
+            dims=('x', 'y'),
+            shape=(2, 2),
+            values=[['1', '2'], ['3', '4']],
+            unit=None,
+            dtype='string',
+        )
