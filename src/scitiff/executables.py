@@ -13,7 +13,7 @@ from ._schema import (
     DAQMetadata,
     ImageDataArrayMetadata,
     ImageVariableMetadata,
-    ScippVariable,
+    ScippVariable1D,
     SciTiffMetadata,
     SciTiffMetadataContainer,
 )
@@ -36,16 +36,16 @@ def _build_dummy_metadata() -> SciTiffMetadataContainer:
             unit="counts",
         ),
         coords={
-            't': ScippVariable(
+            't': ScippVariable1D(
                 dims=('t',), shape=(1,), dtype='int', unit='s', values=[0]
             ),
-            'z': ScippVariable(
+            'z': ScippVariable1D(
                 dims=('z',), shape=(1,), dtype='int', unit='m', values=[0]
             ),
-            'y': ScippVariable(
+            'y': ScippVariable1D(
                 dims=('y',), shape=(1,), dtype='int', unit='m', values=[0]
             ),
-            'x': ScippVariable(
+            'x': ScippVariable1D(
                 dims=('x',), shape=(1,), dtype='int', unit='m', values=[0]
             ),
         },

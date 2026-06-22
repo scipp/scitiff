@@ -19,6 +19,9 @@ from ._schema import (
     ImageDataArrayMetadata,
     ImageVariableMetadata,
     ScippVariable,
+    ScippVariable0D,
+    ScippVariable1D,
+    ScippVariable2D,
     SciTiffMetadata,
     SciTiffMetadataContainer,
 )
@@ -61,7 +64,7 @@ def _from_json_dict(dict_repr_var: dict) -> sc.Variable:
             raise err
 
 
-def _wrap_unit(unit: str | None) -> str | None:
+def _wrap_unit(unit: str | sc.Unit | None) -> str | None:
     # str(None), which is `None` is interpreted as `N` (neuton) when
     # it is loaded back from the json file.
     return str(unit) if unit is not None else None
@@ -71,10 +74,10 @@ def _scipp_variable_to_model(var: sc.Variable) -> ScippVariable:
     # We do not use sc.to_dict directly because
     # we have to handle serialization of some non-string output
     # and also we want to utilize the pydantic model for validation.
-    if var.ndim > 1:
+    if var.ndim > 2:
         raise ValueError(
-            "Only 1-dimensional or scalar variable is allowed for metadata. "
-            "The variable has more than 1 dimension."
+            "Only variables with at most 2 dimensions are allowed for metadata. "
+            "The variable has more than 2 dimensions."
         )
     if var.ndim == 0:  # scalar variable
         values = var.value
@@ -88,13 +91,21 @@ def _scipp_variable_to_model(var: sc.Variable) -> ScippVariable:
     else:
         values = list(var.values)
 
-    return ScippVariable(
-        dims=var.dims,
-        dtype=str(var.dtype),
-        shape=var.shape,
-        unit=_wrap_unit(var.unit),
-        values=values,
-    )
+    constructors = [ScippVariable0D, ScippVariable1D, ScippVariable2D]
+    try:
+        return constructors[var.ndim](
+            dims=var.dims,
+            dtype=str(var.dtype),
+            shape=var.shape,
+            unit=_wrap_unit(var.unit),
+            values=values,
+        )
+    except pydantic.ValidationError as err:
+        raise ValueError(
+            "Failed to construct pydantic model from the variable: ",
+            var,
+            "\nPlease check if the coordinate/mask is compatible with the schema.",
+        ) from err
 
 
 def _scipp_variable_to_metadata_model(var: sc.Variable) -> ImageVariableMetadata:

@@ -31,6 +31,9 @@ from scitiff.io import (
 @pytest.fixture
 def sample_image() -> sc.DataArray:
     pattern = [[i * 400 + j for j in range(4)] for i in range(3)]
+    pixel_id = sc.arange(dim='pixel-id', start=0, stop=12, unit='dimensionless').fold(
+        dim='pixel-id', sizes={'x': 4, 'y': 3}
+    )
     sample_img = sc.DataArray(
         data=sc.array(
             dims=['t', 'y', 'x'],
@@ -44,6 +47,8 @@ def sample_image() -> sc.DataArray:
             'timestamp': sc.datetime('now', unit='hour'),
             'y': sc.linspace(dim='y', start=0.0, stop=300.0, num=3, unit='mm'),
             'x': sc.linspace(dim='x', start=0.0, stop=400.0, num=4, unit='mm'),
+            # 2D coordinate
+            'pixel-id': pixel_id,
         },
     )
     return sample_img
@@ -114,11 +119,11 @@ def test_export_and_load_scitiff_with_scalar_coord(sample_image, tmp_path) -> No
 
 
 @pytest.fixture
-def sample_image_2d_coordinate(sample_image: sc.DataArray) -> sc.DataArray:
+def sample_image_3d_coordinate(sample_image: sc.DataArray) -> sc.DataArray:
     new_image = sample_image.copy()
-    flattend_x = sc.flatten(sample_image, dims=['y', 'x'], to='pos').coords['x']
-    new_image.coords['x'] = sc.fold(
-        flattend_x, dim='pos', dims=['y', 'x'], shape=[3, 4]
+    flattend_x = sc.flatten(sample_image, dims=['t', 'y', 'x'], to='lambda').coords['t']
+    new_image.coords['lambda'] = sc.fold(
+        flattend_x, dim='lambda', dims=['y', 'x', 't'], shape=[3, 4, 2]
     )
     return new_image
 
@@ -129,15 +134,35 @@ def test_export_illegal_dimension_raises(sample_image: sc.DataArray) -> None:
 
 
 def test_export_multi_dimension_coordinate_raises(
-    sample_image_2d_coordinate: sc.DataArray,
+    sample_image_3d_coordinate: sc.DataArray,
 ) -> None:
     with pytest.raises(
         ValueError,
         match=re.escape(
-            'Only 1-dimensional or scalar variable is allowed for metadata.'
+            'Only variables with at most 2 dimensions are allowed for metadata.'
         ),
     ):
-        save_scitiff(sample_image_2d_coordinate, 'test.tiff')
+        save_scitiff(sample_image_3d_coordinate, 'test.tiff')
+
+
+@pytest.fixture
+def sample_image_2d_str_coordinate(sample_image: sc.DataArray) -> sc.DataArray:
+    new_image = sample_image.copy()
+    pixel_id = sc.array(dims=['pixel-id'], values=[str(i) for i in range(12)]).fold(
+        dim='pixel-id', dims=['y', 'x'], shape=[3, 4]
+    )
+    new_image.coords['pixel-id-str'] = pixel_id
+    return new_image
+
+
+def test_export_2D_string_coordinate_raises(
+    sample_image_2d_str_coordinate: sc.DataArray,
+) -> None:
+    with pytest.raises(
+        ValueError,
+        match=re.escape("Failed to construct pydantic model"),
+    ):
+        save_scitiff(sample_image_2d_str_coordinate, 'test.tiff')
 
 
 def test_load_squeeze_false(sample_image, tmp_path) -> None:

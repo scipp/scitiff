@@ -15,7 +15,7 @@ def _idx_endswith(lines: list[str], *suffix: str) -> int:
 def _join_beautified_array(lines: list[str], cur: str = '') -> str:
     try:
         left_bracket = _idx_endswith(lines, '[')
-        right_bracket = _idx_endswith(lines, ']', '],')
+        right_bracket = left_bracket + _idx_endswith(lines[left_bracket:], ']', '],')
         left, array_items, lines = (
             lines[: left_bracket + 1],
             lines[left_bracket + 1 : right_bracket + 1],

@@ -39,20 +39,40 @@ It is ImageJ Hyperstack default dimension order.
 class ScippVariableMetadata(BaseModel):
     """Scipp Variable Metadata without the values."""
 
-    dims: tuple[str, ...]
-    shape: tuple[int, ...]
     unit: str | None
     dtype: str
 
 
-class ScippVariable(ScippVariableMetadata):
-    """Scipp Variable Metadata with the values.
+class ScippVariable0D(ScippVariableMetadata):
+    """Scipp Variable Metadata with scalar value."""
 
-    Only 1D variable is allowed for metadata.
-    """
+    dims: tuple[()] = Field(default=())
+    shape: tuple[()] = Field(default=())
+    values: float | str
+    """The value of the scalar variable"""
 
-    values: float | str | list[float] | list[str]
-    """The values of the variable."""
+
+class ScippVariable1D(ScippVariableMetadata):
+    """Scipp Variable Metadata with 1D array values."""
+
+    dims: tuple[str]
+    shape: tuple[int]
+    values: list[float] | list[str]
+    """The 1D values list of the variable."""
+
+
+class ScippVariable2D(ScippVariableMetadata):
+    """Scipp Variable Metadata with 2D array values.
+
+    For 2D array, only numbers(float/int) are allowed."""
+
+    dims: tuple[str, str]
+    shape: tuple[int, int]
+    values: list[list[float]] = Field(strict=True)
+    """The 2D values list of the variable."""
+
+
+ScippVariable = ScippVariable0D | ScippVariable1D | ScippVariable2D
 
 
 class ImageVariableMetadata(ScippVariableMetadata):
@@ -103,7 +123,7 @@ class NeutronSourceType(Enum):
 
 class NeutronMetadata(BaseModel):
     neutron_type: NeutronSourceType
-    wavelength_range: ScippVariable
+    wavelength_range: tuple[ScippVariable0D, ScippVariable0D]
 
 
 class XRayMetadata(BaseModel): ...

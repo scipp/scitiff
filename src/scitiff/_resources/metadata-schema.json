@@ -53,12 +53,16 @@
       "properties": {
         "data": {"$ref": "#/$defs/ImageVariableMetadata"},
         "masks": {
-          "additionalProperties": {"$ref": "#/$defs/ScippVariable"},
+          "additionalProperties": {
+            "anyOf": [{ "$ref": "#/$defs/ScippVariable0D" }, { "$ref": "#/$defs/ScippVariable1D" }, { "$ref": "#/$defs/ScippVariable2D" }]
+          },
           "title": "Masks",
           "type": "object"
         },
         "coords": {
-          "additionalProperties": {"$ref": "#/$defs/ScippVariable"},
+          "additionalProperties": {
+            "anyOf": [{ "$ref": "#/$defs/ScippVariable0D" }, { "$ref": "#/$defs/ScippVariable1D" }, { "$ref": "#/$defs/ScippVariable2D" }]
+          },
           "title": "Coords",
           "type": "object"
         },
@@ -75,6 +79,11 @@
     "ImageVariableMetadata": {
       "description": "Image Metadata.",
       "properties": {
+        "unit": {
+          "anyOf": [{ "type": "string" }, { "type": "null" }],
+          "title": "Unit"
+        },
+        "dtype": {"title": "Dtype", "type": "string"},
         "dims": {
           "maxItems": 5,
           "minItems": 5,
@@ -88,21 +97,22 @@
           "prefixItems": [{ "type": "integer" }, { "type": "integer" }, { "type": "integer" }, { "type": "integer" }, { "type": "integer" }],
           "title": "Shape",
           "type": "array"
-        },
-        "unit": {
-          "anyOf": [{ "type": "string" }, { "type": "null" }],
-          "title": "Unit"
-        },
-        "dtype": {"title": "Dtype", "type": "string"}
+        }
       },
-      "required": ["dims", "shape", "unit", "dtype"],
+      "required": ["unit", "dtype", "dims", "shape"],
       "title": "ImageVariableMetadata",
       "type": "object"
     },
     "NeutronMetadata": {
       "properties": {
         "neutron_type": {"$ref": "#/$defs/NeutronSourceType"},
-        "wavelength_range": {"$ref": "#/$defs/ScippVariable"}
+        "wavelength_range": {
+          "maxItems": 2,
+          "minItems": 2,
+          "prefixItems": [{ "$ref": "#/$defs/ScippVariable0D" }, { "$ref": "#/$defs/ScippVariable0D" }],
+          "title": "Wavelength Range",
+          "type": "array"
+        }
       },
       "required": ["neutron_type", "wavelength_range"],
       "title": "NeutronMetadata",
@@ -134,31 +144,89 @@
       "title": "SciTiffMetadata",
       "type": "object"
     },
-    "ScippVariable": {
-      "description": "Scipp Variable Metadata with the values.\n\nOnly 1D variable is allowed for metadata.",
+    "ScippVariable0D": {
+      "description": "Scipp Variable Metadata with scalar value.",
       "properties": {
-        "dims": {
-          "items": {"type": "string"},
-          "title": "Dims",
-          "type": "array"
-        },
-        "shape": {
-          "items": {"type": "integer"},
-          "title": "Shape",
-          "type": "array"
-        },
         "unit": {
           "anyOf": [{ "type": "string" }, { "type": "null" }],
           "title": "Unit"
         },
         "dtype": {"title": "Dtype", "type": "string"},
+        "dims": {"default": [], "maxItems": 0, "minItems": 0, "title": "Dims", "type": "array"},
+        "shape": {"default": [], "maxItems": 0, "minItems": 0, "title": "Shape", "type": "array"},
         "values": {
-          "anyOf": [{ "type": "number" }, { "type": "string" }, { "items": { "type": "number" }, "type": "array" }, { "items": { "type": "string" }, "type": "array" }],
+          "anyOf": [{ "type": "number" }, { "type": "string" }],
           "title": "Values"
         }
       },
-      "required": ["dims", "shape", "unit", "dtype", "values"],
-      "title": "ScippVariable",
+      "required": ["unit", "dtype", "values"],
+      "title": "ScippVariable0D",
+      "type": "object"
+    },
+    "ScippVariable1D": {
+      "description": "Scipp Variable Metadata with 1D array values.",
+      "properties": {
+        "unit": {
+          "anyOf": [{ "type": "string" }, { "type": "null" }],
+          "title": "Unit"
+        },
+        "dtype": {"title": "Dtype", "type": "string"},
+        "dims": {
+          "maxItems": 1,
+          "minItems": 1,
+          "prefixItems": [{ "type": "string" }],
+          "title": "Dims",
+          "type": "array"
+        },
+        "shape": {
+          "maxItems": 1,
+          "minItems": 1,
+          "prefixItems": [{ "type": "integer" }],
+          "title": "Shape",
+          "type": "array"
+        },
+        "values": {
+          "anyOf": [{ "items": { "type": "number" }, "type": "array" }, { "items": { "type": "string" }, "type": "array" }],
+          "title": "Values"
+        }
+      },
+      "required": ["unit", "dtype", "dims", "shape", "values"],
+      "title": "ScippVariable1D",
+      "type": "object"
+    },
+    "ScippVariable2D": {
+      "description": "Scipp Variable Metadata with 2D array values.\n\nFor 2D array, only numbers(float/int) are allowed.",
+      "properties": {
+        "unit": {
+          "anyOf": [{ "type": "string" }, { "type": "null" }],
+          "title": "Unit"
+        },
+        "dtype": {"title": "Dtype", "type": "string"},
+        "dims": {
+          "maxItems": 2,
+          "minItems": 2,
+          "prefixItems": [{ "type": "string" }, { "type": "string" }],
+          "title": "Dims",
+          "type": "array"
+        },
+        "shape": {
+          "maxItems": 2,
+          "minItems": 2,
+          "prefixItems": [{ "type": "integer" }, { "type": "integer" }],
+          "title": "Shape",
+          "type": "array"
+        },
+        "values": {
+          "items": {
+            "items": {"type": "number"},
+            "type": "array"
+          },
+          "title": "Values",
+          "type": "array"
+        }
+      },
+      "required": ["unit", "dtype", "dims", "shape", "values"],
+      "title": "ScippVariable2D",
       "type": "object"
     },
     "SourceType": {
