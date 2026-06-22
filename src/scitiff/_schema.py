@@ -123,7 +123,7 @@ class NeutronSourceType(Enum):
 
 class NeutronMetadata(BaseModel):
     neutron_type: NeutronSourceType
-    wavelength_range: ScippVariable
+    wavelength_range: tuple[ScippVariable0D, ScippVariable0D]
 
 
 class XRayMetadata(BaseModel): ...

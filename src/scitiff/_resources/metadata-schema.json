@@ -107,8 +107,11 @@
       "properties": {
         "neutron_type": {"$ref": "#/$defs/NeutronSourceType"},
         "wavelength_range": {
-          "anyOf": [{ "$ref": "#/$defs/ScippVariable0D" }, { "$ref": "#/$defs/ScippVariable1D" }, { "$ref": "#/$defs/ScippVariable2D" }],
-          "title": "Wavelength Range"
+          "maxItems": 2,
+          "minItems": 2,
+          "prefixItems": [{ "$ref": "#/$defs/ScippVariable0D" }, { "$ref": "#/$defs/ScippVariable0D" }],
+          "title": "Wavelength Range",
+          "type": "array"
         }
       },
       "required": ["neutron_type", "wavelength_range"],
