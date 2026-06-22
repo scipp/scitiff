@@ -139,7 +139,7 @@ def test_export_multi_dimension_coordinate_raises(
     with pytest.raises(
         ValueError,
         match=re.escape(
-            'Only 2, 1-dimensional or scalar variable is allowed for metadata.'
+            'Only variables with at most 2 dimensions are allowed for metadata.'
         ),
     ):
         save_scitiff(sample_image_3d_coordinate, 'test.tiff')
