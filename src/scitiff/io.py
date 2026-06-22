@@ -77,7 +77,7 @@ def _scipp_variable_to_model(var: sc.Variable) -> ScippVariable:
     if var.ndim > 2:
         raise ValueError(
             "Only variables with at most 2 dimensions are allowed for metadata. "
-            "The variable has more than 2 dimension."
+            "The variable has more than 2 dimensions."
         )
     if var.ndim == 0:  # scalar variable
         values = var.value
