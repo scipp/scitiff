@@ -65,34 +65,22 @@ def _example_image_after_2610() -> sc.DataGroup:
     return sc.DataGroup(image=example_image, daq=daq_metadata, extra=extra)
 
 
-def _example_image_after_2606() -> sc.DataGroup:
-    from scitiff._schema import DAQMetadata
-    from scitiff.data import hyperstack_example_with_variances_and_mask
-
+def _example_image_after_2660() -> sc.DataGroup:
+    # Reuse most of the previous example.
+    dg = _example_image_after_2610()
+    dg['image'] = dg['image'].copy(deep=True)
     # Trimmed the example image
-    example_image = hyperstack_example_with_variances_and_mask()['x', :10][
-        'y', :10
-    ].copy(deep=True)
+    example_image = dg['image']
     # From 26.6.0, 2D coordinates are allowed.
     example_image.coords['pixel-id'] = sc.arange(
         dim='pixel-id',
         start=0,
         stop=example_image.sizes['x'] * example_image.sizes['y'],
     ).fold(dim='pixel-id', sizes={xydim: example_image.sizes[xydim] for xydim in 'xy'})
-    daq_metadata = DAQMetadata(
-        facility='scitiff-dev',
-        instrument='computer',
-        detector_type='computer',
-        simulated=True,
+    example_image.coords['pixel-distance'] = example_image.coords['pixel-id'].to(
+        dtype=float
     )
-    extra = {
-        'string-value': 'string-value',
-        'int-value': 1,
-        'float-value': 1.2,
-        'scipp-scalar-number': sc.scalar(1, unit='count'),
-        'scipp-scalar-datetime': sc.datetime('now'),
-    }
-    return sc.DataGroup(image=example_image, daq=daq_metadata, extra=extra)
+    return dg
 
 
 def _example_image(version: str) -> sc.DataArray | sc.DataGroup:
@@ -108,7 +96,7 @@ def _example_image(version: str) -> sc.DataArray | sc.DataGroup:
     elif cur_version < Version('26.6.0'):  # When saving data group was introduced.
         return _example_image_after_2610()
     else:
-        return _example_image_after_2606()
+        return _example_image_after_2660()
 
 
 def dump_example_scitiff():
