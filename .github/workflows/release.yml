@@ -42,7 +42,10 @@ jobs:
     if: github.event_name == 'release' && github.event.action == 'published'
     steps:
       - uses: actions/download-artifact@v8.0.1
-      - uses: pypa/gh-action-pypi-publish@v1.12.4
+        with:
+          name: dist
+          path: dist
+      - uses: pypa/gh-action-pypi-publish@v1.14.0
 
   docs:
     needs: [upload_pypi]
