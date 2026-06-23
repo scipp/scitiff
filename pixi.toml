@@ -4,7 +4,7 @@ name = "scitiff"
 platforms = ["linux-64", "osx-64", "osx-arm64", "win-64"]
 version = "0.1.0"
 requires-pixi = ">=0.68"
-exclude-newer = "14d"
+# exclude-newer = "14d"
 
 [system-requirements]
 # Scipp does not support older OSX versions.
@@ -13,7 +13,9 @@ macos = "14.0"
 [dependencies]
 python = ">=3.11.0"
 
-[pypi-dependencies]
+[feature.project.pypi-dependencies]
+# Separate editable project package dependency
+# since some environments need release version of the scitiff.
 scitiff = { path = ".", editable = true, extras = ["test"] }
 
 [tasks.test]
@@ -35,6 +37,14 @@ python = "3.11.*"
 [feature.dev.pypi-dependencies]
 ipykernel = "<7"
 jupyterlab = ">=4.4"
+
+[feature.freeze.pypi-dependencies]
+packaging = ">=26.0"
+rich = ">=15.0.0"
+scitiff = "*"
+
+[feature.freeze.tasks.freeze]
+cmd = "python tools/dump_scitiff_example.py"
 
 [feature.lower-bound]
 solve-strategy = "lowest-direct"
@@ -71,8 +81,9 @@ cmd = "python -m sphinx -W -j2 -v -b {{builder}} -d .docs_doctrees docs html && 
 # ==================== Environments ====================
 
 [environments]
-default = { features = ["dev", "lint"], solve-group = "default" }
-docs = { features = ["docs"], solve-group = "docs" }
-lint = { features = ["lint"], solve-group = "lint" }
-build = { features = ["build"], solve-group = "build" }
-lower-bound = { features = ["lower-bound"], solve-group = "lower-bound" }
+default = { features = ["project", "dev", "lint"], solve-group = "default" }
+docs = { features = ["project", "docs"], solve-group = "docs" }
+lint = { features = ["project", "lint"], solve-group = "lint" }
+build = { features = ["project", "build"], solve-group = "build" }
+freeze = { features = ["freeze"], solve-group = "freeze" }
+lower-bound = { features = ["project", "lower-bound"], solve-group = "lower-bound" }

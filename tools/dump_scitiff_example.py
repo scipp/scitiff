@@ -87,7 +87,7 @@ def dump_example_scitiff():
     default_dir = pathlib.Path(__file__).parent.parent / pathlib.Path(
         'tests/_regression_test_files'
     )
-    prefix = 'scitiff_'
+    prefix = 'scitiff-'
     suffix = '.tiff'
     new_file_name = ''.join([prefix, version, suffix])
     new_file_path = default_dir / new_file_name
