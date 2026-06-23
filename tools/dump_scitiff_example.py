@@ -65,6 +65,24 @@ def _example_image_after_2610() -> sc.DataGroup:
     return sc.DataGroup(image=example_image, daq=daq_metadata, extra=extra)
 
 
+def _example_image_after_2660() -> sc.DataGroup:
+    # Reuse most of the previous example.
+    dg = _example_image_after_2610()
+    dg['image'] = dg['image'].copy(deep=True)
+    # Trimmed the example image
+    example_image = dg['image']
+    # From 26.6.0, 2D coordinates are allowed.
+    example_image.coords['pixel-id'] = sc.arange(
+        dim='pixel-id',
+        start=0,
+        stop=example_image.sizes['x'] * example_image.sizes['y'],
+    ).fold(dim='pixel-id', sizes={xydim: example_image.sizes[xydim] for xydim in 'xy'})
+    example_image.coords['pixel-distance'] = example_image.coords['pixel-id'].to(
+        dtype=float
+    )
+    return dg
+
+
 def _example_image(version: str) -> sc.DataArray | sc.DataGroup:
     from packaging.version import Version
 
@@ -75,8 +93,10 @@ def _example_image(version: str) -> sc.DataArray | sc.DataGroup:
         from scitiff.data import hyperstack_example_with_variances_and_mask
 
         return hyperstack_example_with_variances_and_mask()['x', :10]['y', :10]
-    else:
+    elif cur_version < Version('26.6.0'):  # When saving data group was introduced.
         return _example_image_after_2610()
+    else:
+        return _example_image_after_2660()
 
 
 def dump_example_scitiff():
@@ -87,7 +107,7 @@ def dump_example_scitiff():
     default_dir = pathlib.Path(__file__).parent.parent / pathlib.Path(
         'tests/_regression_test_files'
     )
-    prefix = 'scitiff_'
+    prefix = 'scitiff-'
     suffix = '.tiff'
     new_file_name = ''.join([prefix, version, suffix])
     new_file_path = default_dir / new_file_name
