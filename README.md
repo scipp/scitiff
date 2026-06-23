@@ -1,6 +1,6 @@
 [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](CODE_OF_CONDUCT.md)
 [![PyPI badge](http://img.shields.io/pypi/v/scitiff.svg)](https://pypi.python.org/pypi/scitiff)
-[![Anaconda-Server Badge](https://anaconda.org/conda-forge/scitiff/badges/version.svg)](https://anaconda.org/conda-forge/scitiff)
+[![Conda Badge](https://img.shields.io/conda/v/conda-forge/scitiff)](https://anaconda.org/conda-forge/scitiff)
 [![License: BSD 3-Clause](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](LICENSE)
 
 [![Nightly test at latest releases](https://github.com/scipp/scitiff/actions/workflows/nightly_at_release.yml/badge.svg)](https://github.com/scipp/scitiff/actions/workflows/nightly_at_release.yml)
