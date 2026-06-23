@@ -19,6 +19,14 @@ scitiff = { path = ".", editable = true, extras = ["test"] }
 [tasks.test]
 cmd = "pytest"
 
+# ==================== Build feature ==================
+# We build wheels only and depend on conda-forge for conda packaging.
+[feature.build.pypi-dependencies]
+build = "==1.5.0"
+
+[feature.build.tasks.build]
+cmd = "python -m build"
+
 # ==================== Dev feature ====================
 
 [feature.dev.dependencies]
@@ -27,8 +35,6 @@ python = "3.11.*"
 [feature.dev.pypi-dependencies]
 ipykernel = "<7"
 jupyterlab = ">=4.4"
-
-# ==================== Dev feature ====================
 
 [feature.lower-bound]
 solve-strategy = "lowest-direct"
@@ -68,4 +74,5 @@ cmd = "python -m sphinx -W -j2 -v -b {{builder}} -d .docs_doctrees docs html && 
 default = { features = ["dev", "lint"], solve-group = "default" }
 docs = { features = ["docs"], solve-group = "docs" }
 lint = { features = ["lint"], solve-group = "lint" }
+build = { features = ["build"], solve-group = "build" }
 lower-bound = { features = ["lower-bound"], solve-group = "lower-bound" }
