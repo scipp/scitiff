@@ -64,6 +64,7 @@ jobs:
     - uses: actions/download-artifact@v8.0.1
       with:
         name: docs_html
+        path: docs_html
     - name: Zip documentation
       run: |
         mv docs_html documentation-${{ github.ref_name }}
