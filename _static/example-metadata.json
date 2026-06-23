@@ -1,0 +1,21 @@
+
+{
+  "scitiffmeta": {
+    "image": {
+      "data": {
+        "unit": "counts",
+        "dtype": "float32",
+        "dims": ["t", "z", "c", "y", "x"],
+        "shape": [1, 1, 1, 1, 1]
+      },
+      "coords": {
+        "t": {"unit": "s", "dtype": "int", "dims": ["t"], "shape": [1], "values": [0.0]},
+        "z": {"unit": "m", "dtype": "int", "dims": ["z"], "shape": [1], "values": [0.0]},
+        "y": {"unit": "m", "dtype": "int", "dims": ["y"], "shape": [1], "values": [0.0]},
+        "x": {"unit": "m", "dtype": "int", "dims": ["x"], "shape": [1], "values": [0.0]}
+      }
+    },
+    "daq": {"facility": "ess", "instrument": "odin"},
+    "schema_version": "26.6.0"
+  }
+}
