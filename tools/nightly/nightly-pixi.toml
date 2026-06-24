@@ -1,5 +1,5 @@
 ## Inserted by tools/nightly/override-pixi-config-nightly.sh
-nightly = { features = ["nightly"], solve-group = "nightly" }
+nightly = { features = ["project", "nightly"], solve-group = "nightly" }
 
 [feature.nightly.pypi-dependencies]
 scipp = { version = "==100.0.0.dev0", index = "https://pypi.anaconda.org/scipp-nightly-wheels/simple/" }
