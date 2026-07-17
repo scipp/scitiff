@@ -2,24 +2,25 @@
 {
   "$defs": {
     "DAQMetadata": {
+      "description": "DAQ information related to the image.\n\nFor example, if a raw image is directly extracted by one acquisition, it should",
       "properties": {
         "facility": {
+          "anyOf": [{ "type": "string" }, { "items": { "type": "string" }, "type": "array" }],
           "default": "Unknown",
           "description": "Facility name",
-          "title": "Facility",
-          "type": "string"
+          "title": "Facility"
         },
         "instrument": {
+          "anyOf": [{ "type": "string" }, { "items": { "type": "string" }, "type": "array" }],
           "default": "Unknown",
           "description": "Instrument name",
-          "title": "Instrument",
-          "type": "string"
+          "title": "Instrument"
         },
         "detector_type": {
+          "anyOf": [{ "type": "string" }, { "items": { "type": "string" }, "type": "array" }],
           "default": "Unknown",
           "description": "Detector type",
-          "title": "Detector Type",
-          "type": "string"
+          "title": "Detector Type"
         },
         "source_type": {
           "anyOf": [{ "type": "string" }, { "$ref": "#/$defs/SourceType" }],
@@ -38,6 +39,30 @@
           "default": null,
           "description": "Flag indicating if the data is simulated.",
           "title": "Simulated"
+        },
+        "principal_investigators": {
+          "description": "Principal Investigator(s) of the data acquisition.",
+          "items": {"$ref": "#/$defs/Person"},
+          "title": "Principal Investigators",
+          "type": "array"
+        },
+        "team": {
+          "description": "Anyone who participated the data acquisition.",
+          "items": {"$ref": "#/$defs/Person"},
+          "title": "Team",
+          "type": "array"
+        },
+        "local_contacts": {
+          "description": "Local contact(s) of the data acquisition.",
+          "items": {"$ref": "#/$defs/Person"},
+          "title": "Local Contacts",
+          "type": "array"
+        },
+        "experiment_identifiers": {
+          "description": "Related experiment identifiers. e.g. Proposal IDs or run numbers.",
+          "items": {"$ref": "#/$defs/ExperimentIdentifier"},
+          "title": "Experiment Identifiers",
+          "type": "array"
         }
       },
       "title": "DAQMetadata",
@@ -47,6 +72,24 @@
       "properties": {},
       "title": "ElectronMetadata",
       "type": "object"
+    },
+    "ExperimentIdentifier": {
+      "properties": {
+        "type": {
+          "$ref": "#/$defs/ExperimentIdentifierType",
+          "description": "Type of experiment identifier. e.g. proposal_id, run_number or custom. Custom identifier should have helpful description."
+        },
+        "value": {"title": "Value", "type": "string"},
+        "description": {"default": "", "title": "Description", "type": "string"}
+      },
+      "required": ["type", "value"],
+      "title": "ExperimentIdentifier",
+      "type": "object"
+    },
+    "ExperimentIdentifierType": {
+      "enum": ["PROPOSAL_ID", "RUN_NUMBER", "CUSTOM"],
+      "title": "ExperimentIdentifierType",
+      "type": "string"
     },
     "ImageDataArrayMetadata": {
       "description": "Image DataArray Metadata without values(image).",
@@ -75,6 +118,48 @@
       "required": ["data"],
       "title": "ImageDataArrayMetadata",
       "type": "object"
+    },
+    "ImageProcessMetadata": {
+      "description": "Metadata about how the image was derived\nand what the image represents as a result.",
+      "properties": {
+        "result_type": {
+          "anyOf": [{ "$ref": "#/$defs/ImageResultType" }, { "type": "string" }],
+          "default": "",
+          "description": "The type of image as a result of the image process. ",
+          "title": "Result Type"
+        },
+        "processing_steps": {
+          "items": {"type": "string"},
+          "title": "Processing Steps",
+          "type": "array"
+        },
+        "parameters": {
+          "additionalProperties": {
+            "anyOf": [{ "type": "string" }, { "type": "number" }]
+          },
+          "title": "Parameters",
+          "type": "object"
+        },
+        "process_identifiers": {
+          "description": "Unique ID of the process. e.g. job id in catalogue, package version of the processing workflow.",
+          "items": {"$ref": "#/$defs/ProcessIdentifier"},
+          "title": "Process Identifiers",
+          "type": "array"
+        },
+        "coordinate_descriptions": {
+          "additionalProperties": {"type": "string"},
+          "description": "Details of what each coordinate of the image means.Names are often not descriptive enough.",
+          "title": "Coordinate Descriptions",
+          "type": "object"
+        }
+      },
+      "title": "ImageProcessMetadata",
+      "type": "object"
+    },
+    "ImageResultType": {
+      "enum": ["NORMALIZED", "SAMPLE", "OPENBEAM", "DARKCURRENT"],
+      "title": "ImageResultType",
+      "type": "string"
     },
     "ImageVariableMetadata": {
       "description": "Image Metadata.",
@@ -123,11 +208,51 @@
       "title": "NeutronSourceType",
       "type": "string"
     },
+    "Person": {
+      "properties": {
+        "name": {"description": "Name of the person.", "title": "Name", "type": "string"},
+        "affiliation": {
+          "default": "UNKNOWN",
+          "description": "Affiliation of the person at the time of the data acquisition.",
+          "title": "Affiliation",
+          "type": "string"
+        },
+        "email": {
+          "anyOf": [{ "type": "string" }, { "type": "null" }],
+          "default": null,
+          "description": "Email address of the person.",
+          "title": "Email"
+        },
+        "orcid": {
+          "anyOf": [{ "type": "string" }, { "type": "null" }],
+          "default": null,
+          "description": "ORCID of the person. See https://orcid.org/ for more details about ORCID.",
+          "title": "Orcid"
+        }
+      },
+      "required": ["name"],
+      "title": "Person",
+      "type": "object"
+    },
+    "ProcessIdentifier": {
+      "properties": {
+        "type": {"default": "", "title": "Type", "type": "string"},
+        "value": {"title": "Value", "type": "string"},
+        "description": {"default": "", "title": "Description", "type": "string"}
+      },
+      "required": ["value"],
+      "title": "ProcessIdentifier",
+      "type": "object"
+    },
     "SciTiffMetadata": {
       "description": "SCITIFF Metadata.",
       "properties": {
-        "image": {"$ref": "#/$defs/ImageDataArrayMetadata"},
+        "image": {
+          "$ref": "#/$defs/ImageDataArrayMetadata",
+          "description": "Physical Properties of the Image such as coordinates."
+        },
         "daq": {"$ref": "#/$defs/DAQMetadata"},
+        "process": {"$ref": "#/$defs/ImageProcessMetadata"},
         "extra": {
           "anyOf": [{ "additionalProperties": true, "type": "object" }, { "type": "null" }],
           "default": null,

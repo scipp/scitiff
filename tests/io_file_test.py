@@ -9,7 +9,15 @@ import scipp as sc
 import tifffile as tf
 from scipp.testing import assert_identical
 
-from scitiff import SCITIFF_IMAGE_STACK_DIMENSIONS
+from scitiff import (
+    SCITIFF_IMAGE_STACK_DIMENSIONS,
+    DAQMetadata,
+    ExperimentIdentifier,
+    ExperimentIdentifierType,
+    ImageProcessMetadata,
+    Person,
+    ProcessIdentifier,
+)
 from scitiff.io import (
     ImageJMetadataNotFoundWarning,
     IncompatibleDtypeWarning,
@@ -32,7 +40,7 @@ def test_export_and_load_scitiff(
     assert_identical(sample_image, loaded_image)
 
 
-def test_export_and_load_scitiff_dagagroup(
+def test_export_and_load_scitiff_datagroup(
     sample_image_datagroup: sc.DataGroup, tmp_path: pathlib.Path
 ) -> None:
     tmp_file_path = tmp_path / 'test.tiff'
@@ -43,7 +51,7 @@ def test_export_and_load_scitiff_dagagroup(
     assert_identical(sample_image_datagroup['extra'], loaded_image['extra'])
 
 
-def test_export_and_load_and_export_scitiff_dagagroup(
+def test_export_and_load_and_export_scitiff_datagroup(
     sample_image_datagroup: sc.DataGroup, tmp_path: pathlib.Path
 ) -> None:
     tmp_file_path = tmp_path / 'test.tiff'
@@ -56,7 +64,7 @@ def test_export_and_load_and_export_scitiff_dagagroup(
     save_scitiff(loaded_image, tmp_path / 'test2.tiff')
 
 
-def test_export_and_load_and_export_scitiff_dagagroup_with_extra_none(
+def test_export_and_load_and_export_scitiff_datagroup_with_extra_none(
     sample_image_datagroup: sc.DataGroup, tmp_path: pathlib.Path
 ) -> None:
     sample_image_datagroup['extra'] = None
@@ -242,3 +250,120 @@ def test_load_broken_metadata_warns(tmp_path: pathlib.Path) -> None:
 
     assert loaded_image.dims == tuple(f"dim_{i}" for i in range(2))
     assert np.all(loaded_image.values == arbitrary_image)
+
+
+@pytest.fixture
+def example_daq_meta() -> DAQMetadata:
+    return DAQMetadata(
+        instrument=['nido', 'coda'],
+        simulated=True,
+        principal_investigators=[Person(name="Wash Bear")],
+        experiment_identifiers=[
+            ExperimentIdentifier(
+                type=ExperimentIdentifierType.PROPOSAL_ID, value="123456"
+            )
+        ],
+    )
+
+
+def test_export_and_load_scitiff_datagroup_with_daq_meta(
+    sample_image_datagroup: sc.DataGroup,
+    example_daq_meta: DAQMetadata,
+    tmp_path: pathlib.Path,
+) -> None:
+    sample_image_datagroup['daq'] = example_daq_meta
+    tmp_file_path = tmp_path / 'test.tiff'
+    save_scitiff(sample_image_datagroup, tmp_file_path)
+    loaded_image = load_scitiff(tmp_file_path)
+    assert loaded_image['daq'] == example_daq_meta
+
+
+def test_export_and_load_scitiff_wrong_email_warns(
+    sample_image_datagroup: sc.DataGroup,
+    example_daq_meta: DAQMetadata,
+    tmp_path: pathlib.Path,
+) -> None:
+    # Person model validates the email.
+    with pytest.warns(UserWarning, match="invalid-email-address"):
+        example_daq_meta.principal_investigators.append(
+            Person(name="", email="invalid-email-address")
+        )
+    sample_image_datagroup['daq'] = example_daq_meta
+    tmp_file_path = tmp_path / 'test.tiff'
+    # Scitiff will not complain when it is being saved.
+    save_scitiff(sample_image_datagroup, tmp_file_path)
+    # Scitiff will complain when loading.
+    with pytest.warns(UserWarning, match="invalid-email-address"):
+        loaded_image = load_scitiff(tmp_file_path)
+    assert loaded_image['daq'] == example_daq_meta
+
+
+def test_export_and_load_scitiff_wrong_orcid_warns(
+    sample_image_datagroup: sc.DataGroup,
+    example_daq_meta: DAQMetadata,
+    tmp_path: pathlib.Path,
+) -> None:
+    # Person model validates the orcid.
+    with pytest.warns(UserWarning, match="invalid-orcid"):
+        example_daq_meta.principal_investigators.append(
+            Person(name="", orcid="invalid-orcid")
+        )
+    sample_image_datagroup['daq'] = example_daq_meta
+    tmp_file_path = tmp_path / 'test.tiff'
+    # Scitiff will not complain when it is being saved.
+    save_scitiff(sample_image_datagroup, tmp_file_path)
+    # Scitiff will complain when loading.
+    with pytest.warns(UserWarning, match="invalid-orcid"):
+        loaded_image = load_scitiff(tmp_file_path)
+
+    assert loaded_image['daq'] == example_daq_meta
+
+
+@pytest.fixture
+def example_process_meta() -> ImageProcessMetadata:
+    return ImageProcessMetadata(
+        result_type="Dummy",
+        processing_steps=["random-generator"],
+        parameters={"seed": 42, "algorithm": "uniform"},
+        process_identifiers=[
+            ProcessIdentifier(type="python", value=f"{np.__name__}=={np.__version__}")
+        ],
+        coordinate_descriptions={"t": "time of flight, NOT-time-of-arrival."},
+    )
+
+
+def test_export_and_load_scitiff_datagroup_with_process_meta(
+    sample_image_datagroup: sc.DataGroup,
+    example_process_meta: ImageProcessMetadata,
+    tmp_path: pathlib.Path,
+) -> None:
+    sample_image_datagroup['process'] = example_process_meta
+    tmp_file_path = tmp_path / 'test.tiff'
+    save_scitiff(sample_image_datagroup, tmp_file_path)
+    loaded_image = load_scitiff(tmp_file_path)
+    assert loaded_image['process'] == example_process_meta
+
+
+def test_wrong_coordinate_name_in_description_warns(
+    sample_image_datagroup: sc.DataGroup,
+    example_process_meta: ImageProcessMetadata,
+    tmp_path: pathlib.Path,
+) -> None:
+    example_process_meta.coordinate_descriptions[
+        'something that probably does not exist'
+    ] = ""
+    tmp_file_path = tmp_path / 'test.tiff'
+    sample_image_datagroup['process'] = example_process_meta
+    # Should not fail but warn about the non-existing names.
+    with pytest.warns(
+        expected_warning=UserWarning, match="something that probably does not exist"
+    ):
+        save_scitiff(sample_image_datagroup, tmp_file_path)
+
+    # Should warn about the same thing when loaded.
+    with pytest.warns(
+        expected_warning=UserWarning, match="something that probably does not exist"
+    ):
+        loaded_image = load_scitiff(tmp_file_path)
+
+    assert loaded_image['process'] == example_process_meta

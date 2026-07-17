@@ -1,10 +1,15 @@
 # SPDX-License-Identifier: BSD-3-Clause
 # Copyright (c) 2025 Ess-dmsc-dram contributors (https://github.com/ess-dmsc-dram)
+"""
+Most fields should not be strictly validated to allow loading files with wrong metadata.
+"""
 
-from enum import Enum
-from typing import Any, Literal
+import re
+import warnings
+from enum import Enum, StrEnum
+from typing import Annotated, Any, Literal
 
-from pydantic import BaseModel, Field
+from pydantic import AfterValidator, BaseModel, Field, model_validator
 
 from ._json_helpers import beautify_json
 
@@ -135,10 +140,77 @@ class ElectronMetadata(BaseModel): ...
 SourceMetaType = NeutronMetadata | XRayMetadata | ElectronMetadata | None
 
 
+def complain_if_not_email(value: str) -> str:
+    email_re = re.compile(r"(^[\w\-\.]+)@([\w-]+\.+[\w-]{2,})$")
+    if email_re.match(value) is None:
+        warnings.warn(
+            category=UserWarning,
+            message=f"Given email {value} does not match a valid email format.",
+            stacklevel=1,
+        )
+
+    return value
+
+
+def complain_if_not_orcid(value: str) -> str:
+    orcid_re = re.compile(r"^\d{4}-\d{4}-\d{4}-\d{3}[0-9X]{1}$")
+    if orcid_re.match(value) is None:
+        warnings.warn(
+            category=UserWarning,
+            message=f"Given orcid {value} does not match a valid orcid format.",
+            stacklevel=1,
+        )
+    return value
+
+
+class Person(BaseModel):
+    name: str = Field(description="Name of the person.")
+    affiliation: str = Field(
+        default="UNKNOWN",
+        description="Affiliation of the person at the time of the data acquisition.",
+    )
+    email: Annotated[str, AfterValidator(complain_if_not_email)] | None = Field(
+        default=None, description="Email address of the person."
+    )
+    orcid: Annotated[str, AfterValidator(complain_if_not_orcid)] | None = Field(
+        default=None,
+        description="ORCID of the person. "
+        "See https://orcid.org/ for more details about ORCID.",
+    )
+
+
+class ExperimentIdentifierType(StrEnum):
+    PROPOSAL_ID = "PROPOSAL_ID"
+    """Proposal ID under which the data acquisition occurred."""
+    RUN_NUMBER = "RUN_NUMBER"
+    """Unique number of an individual data acquisition round. e.g. one file written"""
+    CUSTOM = "CUSTOM"
+    """Custom identifier defined by the team."""
+
+
+class ExperimentIdentifier(BaseModel):
+    type: ExperimentIdentifierType = Field(
+        description="Type of experiment identifier. "
+        "e.g. proposal_id, run_number or custom. "
+        "Custom identifier should have helpful description."
+    )
+    value: str
+    description: str = ""
+
+
 class DAQMetadata(BaseModel):
-    facility: str = Field(default="Unknown", description="Facility name")
-    instrument: str = Field(default="Unknown", description="Instrument name")
-    detector_type: str = Field(default="Unknown", description="Detector type")
+    """DAQ information related to the image.
+
+    For example, if a raw image is directly extracted by one acquisition, it should
+    """
+
+    facility: str | list[str] = Field(default="Unknown", description="Facility name")
+    instrument: str | list[str] = Field(
+        default="Unknown", description="Instrument name"
+    )
+    detector_type: str | list[str] = Field(
+        default="Unknown", description="Detector type"
+    )
     source_type: str | SourceType = Field(
         default="Unknown",
         description="Type of source(probe). i.e. neutron, x-ray, etc.",
@@ -147,18 +219,90 @@ class DAQMetadata(BaseModel):
     simulated: bool | None = Field(
         default=None, description="Flag indicating if the data is simulated."
     )
+    principal_investigators: list[Person] = Field(
+        default_factory=list,
+        description="Principal Investigator(s) of the data acquisition.",
+    )
+    team: list[Person] = Field(
+        default_factory=list,
+        description="Anyone who participated the data acquisition.",
+    )
+    local_contacts: list[Person] = Field(
+        default_factory=list,
+        description="Local contact(s) of the data acquisition.",
+    )
+    experiment_identifiers: list[ExperimentIdentifier] = Field(
+        default_factory=list,
+        description="Related experiment identifiers. e.g. Proposal IDs or run numbers.",
+    )
+
+
+class ImageResultType(StrEnum):
+    NORMALIZED = "NORMALIZED"
+    SAMPLE = "SAMPLE"
+    OPENBEAM = "OPENBEAM"
+    DARKCURRENT = "DARKCURRENT"
+
+
+class ProcessIdentifier(BaseModel):
+    type: str = ""
+    value: str
+    description: str = ""
+
+
+class ImageProcessMetadata(BaseModel):
+    """Metadata about how the image was derived
+    and what the image represents as a result.
+
+    """
+
+    result_type: ImageResultType | str = Field(
+        default="", description="The type of image as a result of the image process. "
+    )
+    processing_steps: list[str] = Field(default_factory=list)
+    parameters: dict[str, str | float] = Field(default_factory=dict)
+    process_identifiers: list[ProcessIdentifier] = Field(
+        default_factory=list,
+        description="Unique ID of the process. e.g. job id in catalogue, "
+        "package version of the processing workflow.",
+    )
+    coordinate_descriptions: dict[str, str] = Field(
+        default_factory=dict,
+        description="Details of what each coordinate of the image means."
+        "Names are often not descriptive enough.",
+    )
 
 
 class SciTiffMetadata(BaseModel):
     """SCITIFF Metadata."""
 
-    image: ImageDataArrayMetadata
+    image: ImageDataArrayMetadata = Field(
+        description="Physical Properties of the Image such as coordinates."
+    )
     daq: DAQMetadata = Field(default_factory=DAQMetadata)
+    process: ImageProcessMetadata = Field(default_factory=ImageProcessMetadata)
     extra: dict[str, Any] | None = Field(
         default=None,
         description="Additional metadata that is not part of the schema.",
     )
     schema_version: str = "{VERSION_PLACEHOLDER}"
+
+    @model_validator(mode='after')
+    def check_coordinate_names(self) -> "SciTiffMetadata":
+        # check if the process metadata coordinate
+        # name matches the ones with image metadata.
+        process_coordinates = set(self.process.coordinate_descriptions.keys())
+        image_coordinates = set(self.image.coords.keys())
+        if any(unmatching := process_coordinates - image_coordinates):
+            names = ",".join(unmatching)
+            warnings.warn(
+                "Coordinate names in `process.coordinate_descriptions` "
+                f"not found in the image metadata: [{names}]. "
+                f"Coordinates should be one of: [{','.join(image_coordinates)}]",
+                stacklevel=1,
+            )
+
+        return self
 
 
 class SciTiffMetadataContainer(BaseModel, extra="allow"):
