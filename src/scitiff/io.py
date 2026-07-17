@@ -159,7 +159,7 @@ def _wrap_extra_meta_value(
 
 
 def _extract_extra_metadata_from_datagroup(dg: sc.DataGroup) -> dict | None:
-    if 'extra' not in dg:
+    if 'extra' not in dg or dg['extra'] is None:
         return None
     elif not isinstance(extra := dg['extra'], dict | sc.DataGroup):
         raise ValueError("Extra metadata should be a dictionary or a scipp.DataGroup.")
