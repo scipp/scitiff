@@ -1,14 +1,16 @@
 [workspace]
 channels = ["conda-forge"]
 name = "scitiff"
-platforms = ["linux-64", "osx-64", "osx-arm64", "win-64"]
-version = "0.1.0"
-requires-pixi = ">=0.68"
-# exclude-newer = "14d"
-
-[system-requirements]
 # Scipp does not support older OSX versions.
-macos = "14.0"
+platforms = [
+  "linux-64",
+  { platform = "osx-64", macos = "14.0" },
+  { platform= "osx-arm64", macos = "14.0" },
+  "win-64"
+]
+version = "0.1.0"
+requires-pixi = ">=0.71.2"
+exclude-newer = "14d"
 
 [dependencies]
 python = ">=3.11.0"
@@ -16,7 +18,7 @@ python = ">=3.11.0"
 [feature.project.pypi-dependencies]
 # Separate editable project package dependency
 # since some environments need release version of the scitiff.
-scitiff = { path = ".", editable = true, extras = ["test"] }
+scitiff = { path = ".", editable = true, extras = ["test", "gui"] }
 
 [tasks.test]
 cmd = "pytest"

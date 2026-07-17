@@ -20,7 +20,7 @@ jobs:
           fetch-depth: 0  # history required so setuptools_scm can determine version
       - uses: prefix-dev/setup-pixi@v0.9.6
         with:
-          pixi-version: v0.70.1
+          pixi-version: v0.71.2
           environments: build
           frozen: true
       - name: Build wheels

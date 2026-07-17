@@ -52,7 +52,7 @@ jobs:
           fetch-tags: true  # history required to determine version
       - uses: prefix-dev/setup-pixi@v0.9.6
         with:
-          pixi-version: v0.70.1
+          pixi-version: v0.71.2
           environments: docs
           frozen: true
       - name: Install release version if needed
