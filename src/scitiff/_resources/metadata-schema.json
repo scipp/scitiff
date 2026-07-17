@@ -6,25 +6,22 @@
       "properties": {
         "facility": {
           "anyOf": [{ "type": "string" }, { "items": { "type": "string" }, "type": "array" }],
-          "default": "Unknown",
           "description": "Facility name",
           "title": "Facility"
         },
         "instrument": {
           "anyOf": [{ "type": "string" }, { "items": { "type": "string" }, "type": "array" }],
-          "default": "Unknown",
           "description": "Instrument name",
           "title": "Instrument"
         },
         "detector_type": {
           "anyOf": [{ "type": "string" }, { "items": { "type": "string" }, "type": "array" }],
-          "default": "Unknown",
           "description": "Detector type",
           "title": "Detector Type"
         },
         "source_type": {
-          "anyOf": [{ "type": "string" }, { "$ref": "#/$defs/SourceType" }],
-          "default": "Unknown",
+          "anyOf": [{ "type": "string" }, { "$ref": "#/$defs/SourceType" }, { "type": "null" }],
+          "default": null,
           "description": "Type of source(probe). i.e. neutron, x-ray, etc.",
           "title": "Source Type"
         },
@@ -123,8 +120,8 @@
       "description": "Metadata about how the image was derived\nand what the image represents as a result.",
       "properties": {
         "result_type": {
-          "anyOf": [{ "$ref": "#/$defs/ImageResultType" }, { "type": "string" }],
-          "default": "",
+          "anyOf": [{ "$ref": "#/$defs/ImageResultType" }, { "type": "string" }, { "type": "null" }],
+          "default": null,
           "description": "The type of image as a result of the image process. ",
           "title": "Result Type"
         },
@@ -212,10 +209,10 @@
       "properties": {
         "name": {"description": "Name of the person.", "title": "Name", "type": "string"},
         "affiliation": {
-          "default": "UNKNOWN",
+          "anyOf": [{ "type": "string" }, { "type": "null" }],
+          "default": null,
           "description": "Affiliation of the person at the time of the data acquisition.",
-          "title": "Affiliation",
-          "type": "string"
+          "title": "Affiliation"
         },
         "email": {
           "anyOf": [{ "type": "string" }, { "type": "null" }],
