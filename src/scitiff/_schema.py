@@ -165,8 +165,8 @@ def complain_if_not_orcid(value: str) -> str:
 
 class Person(BaseModel):
     name: str = Field(description="Name of the person.")
-    affiliation: str = Field(
-        default="UNKNOWN",
+    affiliation: str | None = Field(
+        default=None,
         description="Affiliation of the person at the time of the data acquisition.",
     )
     email: Annotated[str, AfterValidator(complain_if_not_email)] | None = Field(
@@ -204,15 +204,15 @@ class DAQMetadata(BaseModel):
     For example, if a raw image is directly extracted by one acquisition, it should
     """
 
-    facility: str | list[str] = Field(default="Unknown", description="Facility name")
+    facility: str | list[str] = Field(default_factory=list, description="Facility name")
     instrument: str | list[str] = Field(
-        default="Unknown", description="Instrument name"
+        default_factory=list, description="Instrument name"
     )
     detector_type: str | list[str] = Field(
-        default="Unknown", description="Detector type"
+        default_factory=list, description="Detector type"
     )
-    source_type: str | SourceType = Field(
-        default="Unknown",
+    source_type: str | SourceType | None = Field(
+        default=None,
         description="Type of source(probe). i.e. neutron, x-ray, etc.",
     )
     source: SourceMetaType = Field(default=None, description="Source metadata.")
@@ -256,8 +256,8 @@ class ImageProcessMetadata(BaseModel):
 
     """
 
-    result_type: ImageResultType | str = Field(
-        default="", description="The type of image as a result of the image process. "
+    result_type: ImageResultType | str | None = Field(
+        default=None, description="The type of image as a result of the image process. "
     )
     processing_steps: list[str] = Field(default_factory=list)
     parameters: dict[str, str | float] = Field(default_factory=dict)
