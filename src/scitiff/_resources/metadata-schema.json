@@ -2,7 +2,7 @@
 {
   "$defs": {
     "DAQMetadata": {
-      "description": "DAQ information related to the image.\n\nFor example, if a raw image is directly extracted by one acquisition, it should",
+      "description": "DAQ information related to the image.\n\nFor example, if a raw image is directly extracted by one acquisition,\nthe tiff image can directly inherit the DAQ metadata from the acquisition.\nIt also means it has one `experiment_identifiers`.\n\nThe metadata can hold information of multiple acquisitions using list of\nfacility, instrument names and experiment identifiers.\nHowever, concatenating multiple acquisitions from different source type\nis not supported.\n\nExamples\n--------\n\n- Single Instrument, Multiple Acquisitions:\n  Single facility, instrument, detector_type with multiple\n  experiment_identifiers.\n\n  It is assumed that multiple experiment identifiers are all from the same\n  detector(instrument).\n\n- Multiple Instrument, Multiple Acquisitions:\n  Matching number of facility, instrument, detector_type\n  and experiment_identifiers.\n\n  It is assumed that the order of the instrument metadata matches\n  the order of the experiment identifiers, similar to how coordinates\n  work in the image array. There is no strict check for the metadata\n  field in the constructor.",
       "properties": {
         "facility": {
           "anyOf": [{ "type": "string" }, { "items": { "type": "string" }, "type": "array" }],

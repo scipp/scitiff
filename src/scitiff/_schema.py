@@ -201,7 +201,34 @@ class ExperimentIdentifier(BaseModel):
 class DAQMetadata(BaseModel):
     """DAQ information related to the image.
 
-    For example, if a raw image is directly extracted by one acquisition, it should
+    For example, if a raw image is directly extracted by one acquisition,
+    the tiff image can directly inherit the DAQ metadata from the acquisition.
+    It also means it has one `experiment_identifiers`.
+
+    The metadata can hold information of multiple acquisitions using list of
+    facility, instrument names and experiment identifiers.
+    However, concatenating multiple acquisitions from different source type
+    is not supported.
+
+    Examples
+    --------
+
+    - Single Instrument, Multiple Acquisitions:
+      Single facility, instrument, detector_type with multiple
+      experiment_identifiers.
+
+      It is assumed that multiple experiment identifiers are all from the same
+      detector(instrument).
+
+    - Multiple Instrument, Multiple Acquisitions:
+      Matching number of facility, instrument, detector_type
+      and experiment_identifiers.
+
+      It is assumed that the order of the instrument metadata matches
+      the order of the experiment identifiers, similar to how coordinates
+      work in the image array. There is no strict check for the metadata
+      field in the constructor.
+
     """
 
     facility: str | list[str] = Field(default_factory=list, description="Facility name")
