@@ -14,6 +14,12 @@ del importlib
 from ._schema import (
     SCITIFF_IMAGE_STACK_DIMENSIONS,
     DAQMetadata,
+    ExperimentIdentifier,
+    ExperimentIdentifierType,
+    ImageProcessMetadata,
+    ImageResultType,
+    Person,
+    ProcessIdentifier,
     SciTiffMetadata,
     SciTiffMetadataContainer,
 )
@@ -32,6 +38,12 @@ from .validator import validate_scitiff_metadata_container
 __all__ = [
     'SCITIFF_IMAGE_STACK_DIMENSIONS',
     'DAQMetadata',
+    'ExperimentIdentifier',
+    'ExperimentIdentifierType',
+    'ImageProcessMetadata',
+    'ImageResultType',
+    'Person',
+    'ProcessIdentifier',
     'SciTiffMetadata',
     'SciTiffMetadataContainer',
     'concat_mask_as_channels',

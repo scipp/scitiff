@@ -17,6 +17,7 @@ from ._schema import (
     SCITIFF_IMAGE_STACK_DIMENSIONS,
     DAQMetadata,
     ImageDataArrayMetadata,
+    ImageProcessMetadata,
     ImageVariableMetadata,
     ScippVariable,
     ScippVariable0D,
@@ -176,15 +177,22 @@ def extract_metadata(dg: sc.DataGroup | sc.DataArray) -> SciTiffMetadataContaine
         _img_metadata = _extract_metadata_from_dataarray(dg)
         _extra_metadata = None
         _daq_metadata = DAQMetadata()
+        _process_metadata = ImageProcessMetadata()
     else:
         _img_metadata = _extract_metadata_from_dataarray(dg['image'])
         _extra_metadata = _extract_extra_metadata_from_datagroup(dg)
         _daq_metadata = dg.get('daq', DAQMetadata())
+        _process_metadata = dg.get('process', ImageProcessMetadata())
 
     if not isinstance(_daq_metadata, DAQMetadata):
         raise TypeError(
             f"DAQ Metadata {_daq_metadata} must be an instance "
             f"of the `scitiff.{DAQMetadata.__name__}`."
+        )
+    if not isinstance(_process_metadata, ImageProcessMetadata):
+        raise TypeError(
+            f"Imgae Process Metadata {_process_metadata} must be an instance "
+            f"of the `scitiff.{ImageProcessMetadata.__name__}`."
         )
 
     return SciTiffMetadataContainer(
@@ -192,6 +200,7 @@ def extract_metadata(dg: sc.DataGroup | sc.DataArray) -> SciTiffMetadataContaine
             image=_img_metadata,
             extra=_extra_metadata,
             daq=_daq_metadata,
+            process=_process_metadata,
             schema_version=__version__,
         )
     )

@@ -83,7 +83,7 @@ cmd = "python -m sphinx -W -j2 -v -b {{builder}} -d .docs_doctrees docs html && 
 # ==================== Environments ====================
 
 [environments]
-default = { features = ["project", "dev", "lint"], solve-group = "default" }
+default = { features = ["project", "docs", "dev", "lint"], solve-group = "default" }
 docs = { features = ["project", "docs"], solve-group = "docs" }
 lint = { features = ["project", "lint"], solve-group = "lint" }
 build = { features = ["project", "build"], solve-group = "build" }
