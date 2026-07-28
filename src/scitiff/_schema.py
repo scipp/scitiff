@@ -145,6 +145,9 @@ class PhotonConvertDetectorMetadata(BaseModel):
     detector_identifier: str | None = None
 
 
+DetectorMetaType = PhotonConvertDetectorMetadata | None
+
+
 def complain_if_not_email(value: str) -> str:
     email_re = re.compile(r"(^[\w\-\.]+)@([\w-]+\.+[\w-]{2,})$")
     if email_re.match(value) is None:
@@ -243,7 +246,7 @@ class DAQMetadata(BaseModel):
     detector_type: str | list[str] = Field(
         default_factory=list, description="Detector type"
     )
-    detector: PhotonConvertDetectorMetadata | None = Field(
+    detector: DetectorMetaType | list[DetectorMetaType] = Field(
         default=None, description="Detector metadata."
     )
     source_type: str | SourceType | None = Field(

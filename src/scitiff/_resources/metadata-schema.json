@@ -20,9 +20,15 @@
           "title": "Detector Type"
         },
         "detector": {
-          "anyOf": [{ "$ref": "#/$defs/PhotonConvertDetectorMetadata" }, { "type": "null" }],
+          "anyOf": [{ "$ref": "#/$defs/PhotonConvertDetectorMetadata" }, { "items": { "anyOf": [{ "$ref": "#/$defs/PhotonConvertDetectorMetadata" }, { "type": "null" }]
+              },
+              "type": "array"
+            },
+            {"type": "null"}
+          ],
           "default": null,
-          "description": "Detector metadata."
+          "description": "Detector metadata.",
+          "title": "Detector"
         },
         "source_type": {
           "anyOf": [{ "type": "string" }, { "$ref": "#/$defs/SourceType" }, { "type": "null" }],
