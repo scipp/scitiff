@@ -19,6 +19,11 @@
           "description": "Detector type",
           "title": "Detector Type"
         },
+        "detector": {
+          "anyOf": [{ "$ref": "#/$defs/PhotonConvertDetectorMetadata" }, { "type": "null" }],
+          "default": null,
+          "description": "Detector metadata."
+        },
         "source_type": {
           "anyOf": [{ "type": "string" }, { "$ref": "#/$defs/SourceType" }, { "type": "null" }],
           "default": null,
@@ -229,6 +234,19 @@
       },
       "required": ["name"],
       "title": "Person",
+      "type": "object"
+    },
+    "PhotonConvertDetectorMetadata": {
+      "properties": {
+        "scintillator_type": {"title": "Scintillator Type", "type": "string"},
+        "detector_identifier": {
+          "anyOf": [{ "type": "string" }, { "type": "null" }],
+          "default": null,
+          "title": "Detector Identifier"
+        }
+      },
+      "required": ["scintillator_type"],
+      "title": "PhotonConvertDetectorMetadata",
       "type": "object"
     },
     "ProcessIdentifier": {
