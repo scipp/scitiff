@@ -49,6 +49,8 @@ rich = ">=15.0.0"
 scitiff = "*"
 
 [feature.freeze.tasks.freeze]
+# You may need to update the environment first,
+# e.g. pixi update, to install latest version of scitiff.
 cmd = "python tools/dump_scitiff_example.py"
 
 [feature.lower-bound]
