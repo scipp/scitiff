@@ -1,0 +1,398 @@
+
+{
+  "$defs": {
+    "DAQMetadata": {
+      "description": "DAQ information related to the image.\n\nFor example, if a raw image is directly extracted by one acquisition,\nthe tiff image can directly inherit the DAQ metadata from the acquisition.\nIt also means it has one `experiment_identifiers`.\n\nThe metadata can hold information of multiple acquisitions using list of\nfacility, instrument names and experiment identifiers.\nHowever, concatenating multiple acquisitions from different source type\nis not supported.\n\nExamples\n--------\n\n- Single Instrument, Multiple Acquisitions:\n  Single facility, instrument, detector_type with multiple\n  experiment_identifiers.\n\n  It is assumed that multiple experiment identifiers are all from the same\n  detector(instrument).\n\n- Multiple Instrument, Multiple Acquisitions:\n  Matching number of facility, instrument, detector_type\n  and experiment_identifiers.\n\n  It is assumed that the order of the instrument metadata matches\n  the order of the experiment identifiers, similar to how coordinates\n  work in the image array. There is no strict check for the metadata\n  field in the constructor.",
+      "properties": {
+        "facility": {
+          "anyOf": [{ "type": "string" }, { "items": { "type": "string" }, "type": "array" }],
+          "description": "Facility name",
+          "title": "Facility"
+        },
+        "instrument": {
+          "anyOf": [{ "type": "string" }, { "items": { "type": "string" }, "type": "array" }],
+          "description": "Instrument name",
+          "title": "Instrument"
+        },
+        "detector_type": {
+          "anyOf": [{ "type": "string" }, { "items": { "type": "string" }, "type": "array" }],
+          "description": "Detector type",
+          "title": "Detector Type"
+        },
+        "detector": {
+          "anyOf": [{ "$ref": "#/$defs/PhotonConvertDetectorMetadata" }, { "items": { "anyOf": [{ "$ref": "#/$defs/PhotonConvertDetectorMetadata" }, { "type": "null" }]
+              },
+              "type": "array"
+            },
+            {"type": "null"}
+          ],
+          "default": null,
+          "description": "Detector metadata.",
+          "title": "Detector"
+        },
+        "source_type": {
+          "anyOf": [{ "type": "string" }, { "$ref": "#/$defs/SourceType" }, { "type": "null" }],
+          "default": null,
+          "description": "Type of source(probe). i.e. neutron, x-ray, etc.",
+          "title": "Source Type"
+        },
+        "source": {
+          "anyOf": [{ "$ref": "#/$defs/NeutronMetadata" }, { "$ref": "#/$defs/XRayMetadata" }, { "$ref": "#/$defs/ElectronMetadata" }, { "type": "null" }],
+          "default": null,
+          "description": "Source metadata.",
+          "title": "Source"
+        },
+        "simulated": {
+          "anyOf": [{ "type": "boolean" }, { "type": "null" }],
+          "default": null,
+          "description": "Flag indicating if the data is simulated.",
+          "title": "Simulated"
+        },
+        "principal_investigators": {
+          "description": "Principal Investigator(s) of the data acquisition.",
+          "items": {"$ref": "#/$defs/Person"},
+          "title": "Principal Investigators",
+          "type": "array"
+        },
+        "team": {
+          "description": "Anyone who participated the data acquisition.",
+          "items": {"$ref": "#/$defs/Person"},
+          "title": "Team",
+          "type": "array"
+        },
+        "local_contacts": {
+          "description": "Local contact(s) of the data acquisition.",
+          "items": {"$ref": "#/$defs/Person"},
+          "title": "Local Contacts",
+          "type": "array"
+        },
+        "experiment_identifiers": {
+          "description": "Related experiment identifiers. e.g. Proposal IDs or run numbers.",
+          "items": {"$ref": "#/$defs/ExperimentIdentifier"},
+          "title": "Experiment Identifiers",
+          "type": "array"
+        }
+      },
+      "title": "DAQMetadata",
+      "type": "object"
+    },
+    "ElectronMetadata": {
+      "properties": {},
+      "title": "ElectronMetadata",
+      "type": "object"
+    },
+    "ExperimentIdentifier": {
+      "properties": {
+        "type": {
+          "$ref": "#/$defs/ExperimentIdentifierType",
+          "description": "Type of experiment identifier. e.g. proposal_id, run_number or custom. Custom identifier should have helpful description."
+        },
+        "value": {"title": "Value", "type": "string"},
+        "description": {"default": "", "title": "Description", "type": "string"}
+      },
+      "required": ["type", "value"],
+      "title": "ExperimentIdentifier",
+      "type": "object"
+    },
+    "ExperimentIdentifierType": {
+      "enum": ["PROPOSAL_ID", "RUN_NUMBER", "CUSTOM"],
+      "title": "ExperimentIdentifierType",
+      "type": "string"
+    },
+    "ImageDataArrayMetadata": {
+      "description": "Image DataArray Metadata without values(image).",
+      "properties": {
+        "data": {"$ref": "#/$defs/ImageVariableMetadata"},
+        "masks": {
+          "additionalProperties": {
+            "anyOf": [{ "$ref": "#/$defs/ScippVariable0D" }, { "$ref": "#/$defs/ScippVariable1D" }, { "$ref": "#/$defs/ScippVariable2D" }]
+          },
+          "title": "Masks",
+          "type": "object"
+        },
+        "coords": {
+          "additionalProperties": {
+            "anyOf": [{ "$ref": "#/$defs/ScippVariable0D" }, { "$ref": "#/$defs/ScippVariable1D" }, { "$ref": "#/$defs/ScippVariable2D" }]
+          },
+          "title": "Coords",
+          "type": "object"
+        },
+        "name": {
+          "anyOf": [{ "type": "string" }, { "type": "null" }],
+          "default": null,
+          "title": "Name"
+        }
+      },
+      "required": ["data"],
+      "title": "ImageDataArrayMetadata",
+      "type": "object"
+    },
+    "ImageProcessMetadata": {
+      "description": "Metadata about how the image was derived\nand what the image represents as a result.",
+      "properties": {
+        "result_type": {
+          "anyOf": [{ "$ref": "#/$defs/ImageResultType" }, { "type": "string" }, { "type": "null" }],
+          "default": null,
+          "description": "The type of image as a result of the image process. ",
+          "title": "Result Type"
+        },
+        "processing_steps": {
+          "items": {"type": "string"},
+          "title": "Processing Steps",
+          "type": "array"
+        },
+        "parameters": {
+          "additionalProperties": {
+            "anyOf": [{ "type": "string" }, { "type": "number" }]
+          },
+          "title": "Parameters",
+          "type": "object"
+        },
+        "process_identifiers": {
+          "description": "Unique ID of the process. e.g. job id in catalogue, package version of the processing workflow.",
+          "items": {"$ref": "#/$defs/ProcessIdentifier"},
+          "title": "Process Identifiers",
+          "type": "array"
+        },
+        "coordinate_descriptions": {
+          "additionalProperties": {"type": "string"},
+          "description": "Details of what each coordinate of the image means.Names are often not descriptive enough.",
+          "title": "Coordinate Descriptions",
+          "type": "object"
+        }
+      },
+      "title": "ImageProcessMetadata",
+      "type": "object"
+    },
+    "ImageResultType": {
+      "enum": ["NORMALIZED", "SAMPLE", "OPENBEAM", "DARKCURRENT"],
+      "title": "ImageResultType",
+      "type": "string"
+    },
+    "ImageVariableMetadata": {
+      "description": "Image Metadata.",
+      "properties": {
+        "unit": {
+          "anyOf": [{ "type": "string" }, { "type": "null" }],
+          "title": "Unit"
+        },
+        "dtype": {"title": "Dtype", "type": "string"},
+        "dims": {
+          "maxItems": 5,
+          "minItems": 5,
+          "prefixItems": [{ "const": "t", "type": "string" }, { "const": "z", "type": "string" }, { "const": "c", "type": "string" }, { "const": "y", "type": "string" }, { "const": "x", "type": "string" }],
+          "title": "Dims",
+          "type": "array"
+        },
+        "shape": {
+          "maxItems": 5,
+          "minItems": 5,
+          "prefixItems": [{ "type": "integer" }, { "type": "integer" }, { "type": "integer" }, { "type": "integer" }, { "type": "integer" }],
+          "title": "Shape",
+          "type": "array"
+        }
+      },
+      "required": ["unit", "dtype", "dims", "shape"],
+      "title": "ImageVariableMetadata",
+      "type": "object"
+    },
+    "NeutronMetadata": {
+      "properties": {
+        "neutron_type": {"$ref": "#/$defs/NeutronSourceType"},
+        "wavelength_range": {
+          "maxItems": 2,
+          "minItems": 2,
+          "prefixItems": [{ "$ref": "#/$defs/ScippVariable0D" }, { "$ref": "#/$defs/ScippVariable0D" }],
+          "title": "Wavelength Range",
+          "type": "array"
+        }
+      },
+      "required": ["neutron_type", "wavelength_range"],
+      "title": "NeutronMetadata",
+      "type": "object"
+    },
+    "NeutronSourceType": {
+      "enum": ["continuous", "long-pulse", "short-pulse"],
+      "title": "NeutronSourceType",
+      "type": "string"
+    },
+    "Person": {
+      "properties": {
+        "name": {"description": "Name of the person.", "title": "Name", "type": "string"},
+        "affiliation": {
+          "anyOf": [{ "type": "string" }, { "type": "null" }],
+          "default": null,
+          "description": "Affiliation of the person at the time of the data acquisition.",
+          "title": "Affiliation"
+        },
+        "email": {
+          "anyOf": [{ "type": "string" }, { "type": "null" }],
+          "default": null,
+          "description": "Email address of the person.",
+          "title": "Email"
+        },
+        "orcid": {
+          "anyOf": [{ "type": "string" }, { "type": "null" }],
+          "default": null,
+          "description": "ORCID of the person. See https://orcid.org/ for more details about ORCID.",
+          "title": "Orcid"
+        }
+      },
+      "required": ["name"],
+      "title": "Person",
+      "type": "object"
+    },
+    "PhotonConvertDetectorMetadata": {
+      "properties": {
+        "scintillator_type": {"title": "Scintillator Type", "type": "string"},
+        "detector_identifier": {
+          "anyOf": [{ "type": "string" }, { "type": "null" }],
+          "default": null,
+          "title": "Detector Identifier"
+        }
+      },
+      "required": ["scintillator_type"],
+      "title": "PhotonConvertDetectorMetadata",
+      "type": "object"
+    },
+    "ProcessIdentifier": {
+      "properties": {
+        "type": {"default": "", "title": "Type", "type": "string"},
+        "value": {"title": "Value", "type": "string"},
+        "description": {"default": "", "title": "Description", "type": "string"}
+      },
+      "required": ["value"],
+      "title": "ProcessIdentifier",
+      "type": "object"
+    },
+    "SciTiffMetadata": {
+      "description": "SCITIFF Metadata.",
+      "properties": {
+        "image": {
+          "$ref": "#/$defs/ImageDataArrayMetadata",
+          "description": "Physical Properties of the Image such as coordinates."
+        },
+        "daq": {"$ref": "#/$defs/DAQMetadata"},
+        "process": {"$ref": "#/$defs/ImageProcessMetadata"},
+        "extra": {
+          "anyOf": [{ "additionalProperties": true, "type": "object" }, { "type": "null" }],
+          "default": null,
+          "description": "Additional metadata that is not part of the schema.",
+          "title": "Extra"
+        },
+        "schema_version": {
+          "default": "{VERSION_PLACEHOLDER}",
+          "title": "Schema Version",
+          "type": "string"
+        }
+      },
+      "required": ["image"],
+      "title": "SciTiffMetadata",
+      "type": "object"
+    },
+    "ScippVariable0D": {
+      "description": "Scipp Variable Metadata with scalar value.",
+      "properties": {
+        "unit": {
+          "anyOf": [{ "type": "string" }, { "type": "null" }],
+          "title": "Unit"
+        },
+        "dtype": {"title": "Dtype", "type": "string"},
+        "dims": {"default": [], "maxItems": 0, "minItems": 0, "title": "Dims", "type": "array"},
+        "shape": {"default": [], "maxItems": 0, "minItems": 0, "title": "Shape", "type": "array"},
+        "values": {
+          "anyOf": [{ "type": "number" }, { "type": "string" }],
+          "title": "Values"
+        }
+      },
+      "required": ["unit", "dtype", "values"],
+      "title": "ScippVariable0D",
+      "type": "object"
+    },
+    "ScippVariable1D": {
+      "description": "Scipp Variable Metadata with 1D array values.",
+      "properties": {
+        "unit": {
+          "anyOf": [{ "type": "string" }, { "type": "null" }],
+          "title": "Unit"
+        },
+        "dtype": {"title": "Dtype", "type": "string"},
+        "dims": {
+          "maxItems": 1,
+          "minItems": 1,
+          "prefixItems": [{ "type": "string" }],
+          "title": "Dims",
+          "type": "array"
+        },
+        "shape": {
+          "maxItems": 1,
+          "minItems": 1,
+          "prefixItems": [{ "type": "integer" }],
+          "title": "Shape",
+          "type": "array"
+        },
+        "values": {
+          "anyOf": [{ "items": { "type": "number" }, "type": "array" }, { "items": { "type": "string" }, "type": "array" }],
+          "title": "Values"
+        }
+      },
+      "required": ["unit", "dtype", "dims", "shape", "values"],
+      "title": "ScippVariable1D",
+      "type": "object"
+    },
+    "ScippVariable2D": {
+      "description": "Scipp Variable Metadata with 2D array values.\n\nFor 2D array, only numbers(float/int) are allowed.",
+      "properties": {
+        "unit": {
+          "anyOf": [{ "type": "string" }, { "type": "null" }],
+          "title": "Unit"
+        },
+        "dtype": {"title": "Dtype", "type": "string"},
+        "dims": {
+          "maxItems": 2,
+          "minItems": 2,
+          "prefixItems": [{ "type": "string" }, { "type": "string" }],
+          "title": "Dims",
+          "type": "array"
+        },
+        "shape": {
+          "maxItems": 2,
+          "minItems": 2,
+          "prefixItems": [{ "type": "integer" }, { "type": "integer" }],
+          "title": "Shape",
+          "type": "array"
+        },
+        "values": {
+          "items": {
+            "items": {"type": "number"},
+            "type": "array"
+          },
+          "title": "Values",
+          "type": "array"
+        }
+      },
+      "required": ["unit", "dtype", "dims", "shape", "values"],
+      "title": "ScippVariable2D",
+      "type": "object"
+    },
+    "SourceType": {
+      "description": "Enum for probe types.",
+      "enum": ["neutron", "x-ray", "electron"],
+      "title": "SourceType",
+      "type": "string"
+    },
+    "XRayMetadata": {
+      "properties": {},
+      "title": "XRayMetadata",
+      "type": "object"
+    }
+  },
+  "additionalProperties": true,
+  "description": "SCITIFF Compatible Metadata.",
+  "properties": {
+    "scitiffmeta": {"$ref": "#/$defs/SciTiffMetadata"}
+  },
+  "required": ["scitiffmeta"],
+  "title": "SciTiffMetadataContainer",
+  "type": "object"
+}
