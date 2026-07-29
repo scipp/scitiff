@@ -72,7 +72,7 @@ jobs:
     - name: Upload release assets
       env:
         GITHUB_TOKEN: ${{ github.token }}
-      run: gh release upload ${{ github.ref_name }} ./documentation-${{ github.ref_name }}.zip
+      run: gh release upload ${{ github.ref_name }} ./documentation-${{ github.ref_name }}.zip --repo ${{ github.repository }}
 
   todo-reminder:
     # Q: Why we don't automatically publish the new dataset?
