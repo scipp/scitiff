@@ -11,7 +11,7 @@ import pytest
 import requests
 from packaging.version import Version
 
-from scitiff.io import load_scitiff
+from scitiff.io import load_scitiff, save_scitiff
 
 _LOWER_BOUND_VERSION = Version('25.1.0')
 _SCITIFF_TEST_CACHE = pathlib.Path.home() / '.cache' / 'scitiff-test'
@@ -137,3 +137,16 @@ def test_loading_old_version_files(scitiff_version) -> None:
     _known_erros = _KNOWN_ERRORS.get(scitiff_version, ())
     with known_backward_compatibility_issues(_known_erros):
         load_scitiff(_get_scitiff_example_file_path(scitiff_version))
+
+
+@pytest.mark.parametrize(
+    argnames=('scitiff_version'),
+    argvalues=SCITIFF_PACKAGE_INFO.testing_versions,
+)
+def test_old_version_files_load_save_round_trip(scitiff_version, tmp_path) -> None:
+    _known_erros = _KNOWN_ERRORS.get(scitiff_version, ())
+    with known_backward_compatibility_issues(_known_erros):
+        img = load_scitiff(
+            _get_scitiff_example_file_path(scitiff_version), only_image=False
+        )
+    save_scitiff(img, tmp_path / (scitiff_version + '.tif'))
