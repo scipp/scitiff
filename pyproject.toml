@@ -31,7 +31,7 @@ requires-python = ">=3.11"
 # Make sure to list one dependency per line.
 dependencies = [
     "scipp >= 24.11.0",  # Started to support python 3.13
-    "tifffile >= 2024.7.2",  # Started to support python 3.13
+    "tifffile >= 2026.2.24",  # It fails to store/load metadata with lower version than this.
     "jsonschema >= 4.23.0",  # Declared the support for python 3.13
     "pydantic >= 2.11", # Minimum version that compiles consistent json schema from pydantic models.
 ]
