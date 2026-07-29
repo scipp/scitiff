@@ -73,3 +73,32 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ github.token }}
       run: gh release upload ${{ github.ref_name }} ./documentation-${{ github.ref_name }}.zip
+
+  todo-reminder:
+    # Q: Why we don't automatically publish the new dataset?
+    # A: New regression test file should have most complicated metadata as much as possible.
+    #    However, the values should also be reasonablly realistic so that the users or
+    #    other contributors can easily understand why they are about from the test files.
+    #    It was easy enough for humans to fill such values in the test files manually.
+    #    On the other hand, it is not impossible to automate generating the regression test file
+    #    and I (owner) is not against automating it so feel free to automate it if you have time for it.
+    # Q: Why do we automate reminding it though?
+    # A: The regression test is triggered only when there is a new PR or the nightly is triggered.
+    #    New regression test file was forgotten to be updated until there was a CI failure since the last release.
+    name: Remind to update the regression test dataset
+    needs: upload_pypi
+    runs-on: ubuntu-slim
+    permissions:
+      issues: write  # Remind by opening an issue.
+    if: github.event_name == 'release'
+    steps:
+      - uses: actions/checkout@v6.1.0
+      - name: Open an issue.
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          gh issue create -t "New regression test file for ${TAG}" \
+            -l CI \
+            -b "Release for ${TAG} was successful. \
+            Regression test file should be updated in tests/_regression_test_files."
