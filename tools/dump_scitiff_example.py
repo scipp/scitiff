@@ -83,6 +83,87 @@ def _example_image_after_2660() -> sc.DataGroup:
     return dg
 
 
+def _example_image_after_2670() -> sc.DataGroup:
+    from scitiff._schema import (
+        DAQMetadata,
+        ExperimentIdentifier,
+        ExperimentIdentifierType,
+        ImageProcessMetadata,
+        ImageResultType,
+        NeutronMetadata,
+        NeutronSourceType,
+        Person,
+        PhotonConvertDetectorMetadata,
+        ProcessIdentifier,
+        ScippVariable0D,
+        SourceType,
+    )
+
+    # Reuse image of the previous example.
+    dg = _example_image_after_2660()
+    # From 26.7.0, more DAQ metadata and image process metadata fields were added
+    # and bug was fixed for extra metadata None.
+    dg['extra'] = None
+    dg['daq'] = DAQMetadata(
+        facility=['ess', 'esss'],
+        instrument=['coda', 'nido'],
+        detector_type='optic-converter',
+        detector=[
+            PhotonConvertDetectorMetadata(
+                scintillator_type='A123', detector_identifier="ABC123"
+            ),
+            PhotonConvertDetectorMetadata(
+                scintillator_type='A123', detector_identifier="ABD122"
+            ),
+        ],
+        source_type=SourceType.NEUTRON,
+        source=NeutronMetadata(
+            neutron_type=NeutronSourceType.LONG_PULSE,
+            wavelength_range=(
+                ScippVariable0D(values=1.0, unit='angstrom', dtype='float'),
+                ScippVariable0D(values=10.0, unit='angstrom', dtype='float'),
+            ),
+        ),
+        simulated=True,
+        principal_investigators=[
+            Person(
+                affiliation='ess',
+                email='valid@email.com',
+                name='Jeffry',
+                orcid="0000-0000-0000-0001",
+            )
+        ],
+        team=[Person(name='Herrison'), Person(name='Fuizao')],
+        local_contacts=[Person(name='Some one at ESS')],
+        experiment_identifiers=[
+            ExperimentIdentifier(
+                type=ExperimentIdentifierType.RUN_NUMBER,
+                value='1234',
+                description='the overnight run for the sample 1',
+            )
+        ],
+    )
+    dg['process'] = ImageProcessMetadata(
+        result_type=ImageResultType.NORMALIZED,
+        processing_steps=[
+            'dark-current-subtraction',
+            'normalized-by-proton-charge',
+            'histogram-in-wavelength',
+            'normalized-by-openbeam-image',
+        ],
+        parameters={'wav-bin-nums': 300},
+        process_identifiers=[
+            ProcessIdentifier(
+                type='notebook',
+                value='odin-data-reduction.ipynb',
+                description='normalization-notebook',
+            )
+        ],
+        coordinate_descriptions={'pixel-id': 'Pixel ID of the entire detector'},
+    )
+    return dg
+
+
 def _example_image(version: str) -> sc.DataArray | sc.DataGroup:
     from packaging.version import Version
 
@@ -95,8 +176,10 @@ def _example_image(version: str) -> sc.DataArray | sc.DataGroup:
         return hyperstack_example_with_variances_and_mask()['x', :10]['y', :10]
     elif cur_version < Version('26.6.0'):  # When saving data group was introduced.
         return _example_image_after_2610()
-    else:
+    elif cur_version < Version('26.7.0'):  # When DAQ/process metadata were introduced.
         return _example_image_after_2660()
+    else:
+        return _example_image_after_2670()
 
 
 def dump_example_scitiff():
@@ -114,6 +197,10 @@ def dump_example_scitiff():
     logger.info("Dumping new example scitiff at %s", new_file_path.as_posix())
     image = _example_image(version=version)
     logger.info(image)
+    if isinstance(image, sc.DataGroup):
+        for k, v in image.items():
+            logger.info("%s: ", k)
+            logger.info(v)
     logger.info("Dumping image for version %s", version)
     save_scitiff(dg=image, file_path=new_file_path)
     logger.info(
