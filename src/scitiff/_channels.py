@@ -15,7 +15,7 @@ def _validate_scitiff_image(da: sc.DataArray) -> None:
 
 
 def _variances_and_masks_in_channels(da: sc.DataArray) -> bool:
-    return 'c' in da.coords and da.sizes.get('c', 0) > 1
+    return 'c' in da.coords and da.sizes['c'] > 1
 
 
 def values(
@@ -59,8 +59,6 @@ def values(
         sliced = image['c', sc.scalar(Channel.intensities.value)]
     elif image.variances is not None:
         sliced = sc.values(image)
-    else:
-        sliced = image
 
     # It drops the multidimensional mask to be consistent with the case
     # where the mask is concatnenated into channel dimensions.
