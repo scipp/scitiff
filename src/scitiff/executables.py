@@ -215,7 +215,10 @@ def print_metadata():
             meta = {
                 key: value for key, value in meta.items() if key in scitiff_meta_keys
             }
-
+        img_meta = meta.get('scitiffmeta', {}).get('image', {}).get('data', {})
+        dims = img_meta.get('dims', [])
+        shape = img_meta.get('shape', [])
+        pprint(f"Image sizes: {dict(zip(dims, shape, strict=False))}")
         pprint(shorten_values(meta), max_depth=args.max_depth)
 
 
