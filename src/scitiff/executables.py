@@ -222,10 +222,18 @@ def print_metadata():
 def build_logger(args: argparse.Namespace) -> logging.Logger:
     import sys
 
+    try:
+        from rich.logging import RichHandler
+
+        handler = RichHandler()
+    except ImportError:
+        handler = logging.StreamHandler(sys.stdout)
+
     logger = logging.getLogger("scitiff")
     if args.verbose:
+        logger.addHandler(handler)
         logger.setLevel(logging.INFO)
-        logger.addHandler(logging.StreamHandler(sys.stdout))
+
     return logger
 
 
@@ -253,11 +261,23 @@ def slice_channel():
     parser.add_argument(
         "--verbose", action="store_true", help="Log level INFO.", default=False
     )
+    parser.add_argument(
+        "--exist-ok",
+        action="store_true",
+        help="Okay to overwrite if output file already exists.",
+        default=False,
+    )
 
     args = parser.parse_args()
     logger = build_logger(args)
     file_path = pathlib.Path(args.file_name)
     output_file_path = pathlib.Path(args.output_file_name)
+    if output_file_path.exists() and not args.exist_ok:
+        logger.error(
+            "Output file path %s already exists. Cannot overwrite an existing file.",
+            output_file_path,
+        )
+        exit(1)
     logger.info("Intensities of %s will be saved into %s", file_path, output_file_path)
     try:
         img = load_scitiff(
@@ -269,6 +289,8 @@ def slice_channel():
 
     logger.info("Loaded image: %s", img)
     sliced = values(img)
-    if sc.is_identical(img, sliced):
-        logger.warning("Sliced image is exactly the same as the input image.")
+    if sc.identical(img, sliced):
+        logger.warning("Sliced image is exactly same as the input image.")
     save_scitiff(sliced, output_file_path, concat_stdevs_and_mask=False)
+    logger.info("Sliced image: %s", sliced)
+    logger.info("Sliced intensity channel saved in %s", output_file_path)
