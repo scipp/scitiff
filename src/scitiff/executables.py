@@ -1,5 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 # Copyright (c) 2025 Ess-dmsc-dram contributors (https://github.com/ess-dmsc-dram)
+import argparse
+import logging
 import pathlib
 from typing import TypeVar
 
@@ -63,9 +65,6 @@ def dump_metadata_example():
     """
     Dump metadata example into a json file.
     """
-    import argparse
-    import pathlib
-
     parser = argparse.ArgumentParser(
         description="Dump metadata example into a json file."
     )
@@ -172,9 +171,6 @@ def print_metadata():
     """
     Show all (ImageJ) metadata of a tiff file in a console.
     """
-    import argparse
-    import pathlib
-
     try:
         from rich.pretty import pprint
     except ImportError as e:
@@ -221,3 +217,58 @@ def print_metadata():
             }
 
         pprint(shorten_values(meta), max_depth=args.max_depth)
+
+
+def build_logger(args: argparse.Namespace) -> logging.Logger:
+    import sys
+
+    logger = logging.getLogger("scitiff")
+    if args.verbose:
+        logger.setLevel(logging.INFO)
+        logger.addHandler(logging.StreamHandler(sys.stdout))
+    return logger
+
+
+def slice_channel():
+    """Slice intensities channel from an image."""
+    import scipp as sc
+
+    from ._channels import values
+    from .io import load_scitiff, save_scitiff
+
+    parser = argparse.ArgumentParser(
+        description="Quickly show metadata of a tiff file."
+    )
+    parser.add_argument(
+        type=str,
+        dest="file_name",
+        help="Input tiff file name.",
+    )
+    parser.add_argument(
+        "--output",
+        type=str,
+        dest="output_file_name",
+        help="Output tiff file name only with intensities.",
+    )
+    parser.add_argument(
+        "--verbose", action="store_true", help="Log level INFO.", default=False
+    )
+
+    args = parser.parse_args()
+    logger = build_logger(args)
+    file_path = pathlib.Path(args.file_name)
+    output_file_path = pathlib.Path(args.output_file_name)
+    logger.info("Intensities of %s will be saved into %s", file_path, output_file_path)
+    try:
+        img = load_scitiff(
+            file_path, squeeze=True, resolve_channels=True, only_image=True
+        )
+    except Exception as e:
+        logger.error("Error with loading the image.")
+        raise e
+
+    logger.info("Loaded image: %s", img)
+    sliced = values(img)
+    if sc.is_identical(img, sliced):
+        logger.warning("Sliced image is exactly the same as the input image.")
+    save_scitiff(sliced, output_file_path, concat_stdevs_and_mask=False)
