@@ -54,6 +54,16 @@ def test_no_c_coord_multi_channel_image_raises(sample_image_channels) -> None:
         scitiff.values(sample_image_channels.drop_coords('c'))
 
 
-def test_no_image_key_in_datagroup() -> None:
+def test_no_image_key_in_datagroup_raises() -> None:
     with pytest.raises(KeyError, match='Cannot find an image'):
         scitiff.values(sc.DataGroup())
+
+
+def test_no_channel_no_var_mask_image_stays_the_same(sample_image) -> None:
+    assert 'c' not in sample_image.sizes
+    assert 'c' not in sample_image.coords
+    assert sample_image.variances is None
+    assert len(sample_image.masks) == 0
+    result = scitiff.values(sample_image)
+    assert_identical(sample_image, result)
+    assert result is not sample_image
