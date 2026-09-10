@@ -1,5 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 # Copyright (c) 2025 Ess-dmsc-dram contributors (https://github.com/ess-dmsc-dram)
+import argparse
+import logging
 import pathlib
 from typing import TypeVar
 
@@ -63,9 +65,6 @@ def dump_metadata_example():
     """
     Dump metadata example into a json file.
     """
-    import argparse
-    import pathlib
-
     parser = argparse.ArgumentParser(
         description="Dump metadata example into a json file."
     )
@@ -172,9 +171,6 @@ def print_metadata():
     """
     Show all (ImageJ) metadata of a tiff file in a console.
     """
-    import argparse
-    import pathlib
-
     try:
         from rich.pretty import pprint
     except ImportError as e:
@@ -219,5 +215,85 @@ def print_metadata():
             meta = {
                 key: value for key, value in meta.items() if key in scitiff_meta_keys
             }
-
+        img_meta = meta.get('scitiffmeta', {}).get('image', {}).get('data', {})
+        dims = img_meta.get('dims', [])
+        shape = img_meta.get('shape', [])
+        pprint(f"Image sizes: {dict(zip(dims, shape, strict=False))}")
         pprint(shorten_values(meta), max_depth=args.max_depth)
+
+
+def build_logger(args: argparse.Namespace) -> logging.Logger:
+    import sys
+
+    try:
+        from rich.logging import RichHandler
+
+        handler = RichHandler()
+    except ImportError:
+        handler = logging.StreamHandler(sys.stdout)
+
+    logger = logging.getLogger("scitiff")
+    if args.verbose:
+        logger.addHandler(handler)
+        logger.setLevel(logging.INFO)
+
+    return logger
+
+
+def slice_channel():
+    """Slice intensities channel from an image."""
+    import scipp as sc
+
+    from ._channels import values
+    from .io import load_scitiff, save_scitiff
+
+    parser = argparse.ArgumentParser(
+        description="Quickly show metadata of a tiff file."
+    )
+    parser.add_argument(
+        type=str,
+        dest="file_name",
+        help="Input tiff file name.",
+    )
+    parser.add_argument(
+        "--output",
+        type=str,
+        dest="output_file_name",
+        help="Output tiff file name only with intensities.",
+    )
+    parser.add_argument(
+        "--verbose", action="store_true", help="Log level INFO.", default=False
+    )
+    parser.add_argument(
+        "--exist-ok",
+        action="store_true",
+        help="Okay to overwrite if output file already exists.",
+        default=False,
+    )
+
+    args = parser.parse_args()
+    logger = build_logger(args)
+    file_path = pathlib.Path(args.file_name)
+    output_file_path = pathlib.Path(args.output_file_name)
+    if output_file_path.exists() and not args.exist_ok:
+        logger.error(
+            "Output file path %s already exists. Cannot overwrite an existing file.",
+            output_file_path,
+        )
+        exit(1)
+    logger.info("Intensities of %s will be saved into %s", file_path, output_file_path)
+    try:
+        img = load_scitiff(
+            file_path, squeeze=True, resolve_channels=True, only_image=True
+        )
+    except Exception as e:
+        logger.error("Error with loading the image.")
+        raise e
+
+    logger.info("Loaded image: %s", img)
+    sliced = values(img)
+    if sc.identical(img, sliced):
+        logger.warning("Sliced image is exactly same as the input image.")
+    save_scitiff(sliced, output_file_path, concat_stdevs_and_mask=False)
+    logger.info("Sliced image: %s", sliced)
+    logger.info("Sliced intensity channel saved in %s", output_file_path)
