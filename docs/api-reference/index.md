@@ -31,6 +31,7 @@
    concat_stdevs_and_mask_as_channels
    concat_stdevs_as_channels
    resolve_scitiff_channels
+   values
 
 ```
 

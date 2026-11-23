@@ -11,6 +11,7 @@ except importlib.metadata.PackageNotFoundError:
 
 del importlib
 
+from ._channels import values
 from ._schema import (
     SCITIFF_IMAGE_STACK_DIMENSIONS,
     DAQMetadata,
@@ -71,4 +72,5 @@ __all__ = [
     'show_metadata',
     'to_scitiff_image',
     'validate_scitiff_metadata_container',
+    'values',
 ]
